@@ -17,6 +17,6 @@ func init() {
 func main() {
 	log.Debug("Starting the Server...")
 	server := gokul.NewServer()
-	server.ScanAppsForControllers()
+	//server.ScanAppsForControllers()
 	gokul.Run(server)
 }

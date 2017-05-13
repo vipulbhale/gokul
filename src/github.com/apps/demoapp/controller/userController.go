@@ -6,7 +6,12 @@ import (
 )
 
 type DemoController struct {
-	*controller2.BaseController
+	controller2.BaseController
+}
+
+func init(){
+	demoController := new(DemoController)
+	demoController.RegisterController("democontroller")
 }
 
 func (d *DemoController) Demo() {

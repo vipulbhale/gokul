@@ -2,21 +2,30 @@ package controller
 
 import (
 	"fmt"
-	"net/http"
+)
+var (
+	MapOfControllers map[string]BaseController
 )
 
+
+func init() {
+
+}
+
 type Controller interface {
+	Render()
 }
 
 type BaseController struct {
 	Controller
-	w http.ResponseWriter
-	r *http.Request
+
 }
 
-func (cntrl BaseController) Render() {
+func (baseController *BaseController) Render() {
 	fmt.Println("Inside render method")
 }
-func NewController(w http.ResponseWriter, r *http.Request) *BaseController {
-	return &BaseController{w: w, r: r}
+
+func (baseController BaseController) RegisterController(name string) {
+	MapOfControllers[name] = baseController
+	fmt.Println(MapOfControllers)
 }
