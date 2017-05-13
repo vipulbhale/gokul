@@ -5,11 +5,12 @@ import (
 	"fmt"
 	"github.com/gokul"
 	"io"
-	"log"
 	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
+	log "github.com/logrus"
+
 )
 
 var (
@@ -21,6 +22,11 @@ var (
 
 func init() {
 	regex, _ = regexp.Compile(patternRoute)
+	// Output to stdout instead of the default stderr, could also be a file.
+	log.SetOutput(os.Stdout)
+
+	// Only log the debug severity or above.
+	log.SetLevel(log.DebugLevel)
 }
 
 type route struct {
@@ -50,8 +56,10 @@ func (r *route) GetMethod() string {
 }
 
 func GetRoute(url string, httpVerb string) (r *route) {
-	r = new(route)
+	log.Debug("Entering the GetRoute method.")
 	var appURL string
+
+	r = new(route)
 	appURL = ""
 
 	compiledPattern := regexp.MustCompile("\\s+")
@@ -63,9 +71,10 @@ func GetRoute(url string, httpVerb string) (r *route) {
 	}
 
 	appSrcRoot, _ := os.Getwd()
-	appRouteCfgFile := filepath.Join(appSrcRoot, "src/"+gokul.APPS_SRC_ROOT+"/"+appContext+"/config/routes.cfg")
+	appRouteCfgFile := filepath.Join(appSrcRoot, "gokul", "src" ,"github.com", gokul.APPS_SRC_ROOT, appContext, "/config/routes.cfg")
 
-	fmt.Println(appRouteCfgFile)
+	log.Debug("appRouteCfgFile is :: ", appRouteCfgFile)
+
 	appcfgInputFile, cfgInputError := os.Open(appRouteCfgFile)
 	if cfgInputError != nil {
 		log.Fatal("Error reading the config file for app. Exiting.")

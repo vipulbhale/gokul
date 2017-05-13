@@ -13,19 +13,23 @@ import (
 	"reflect"
 	"strconv"
 	"time"
+	"github.com/gokul/controller"
 )
 
+var (
+	httpServer *http.Server
+	baseControllers *controller.BaseController
+)
 func init() {
 	// Output to stdout instead of the default stderr, could also be a file.
 	log.SetOutput(os.Stdout)
 
 	// Only log the debug severity or above.
 	log.SetLevel(log.DebugLevel)
+	baseControllers = new(controller.BaseController)
 }
 
-var (
-	httpServer *http.Server
-)
+
 
 type server struct {
 	//ip    string
@@ -83,6 +87,7 @@ func Run(s *server) {
 	var network string
 	var err error
 
+	log.Debug("Map of all controllers ", baseControllers.GetMapOfController())
 	//address := s.ip + ":" + strconv.Itoa(s.port)
 	address := s.cfg["ip.address"] + ":" + s.cfg["server.port"]
 

@@ -3,13 +3,13 @@ package controller
 import (
 	"fmt"
 )
+
 var (
 	MapOfControllers map[string]BaseController
 )
 
-
 func init() {
-
+	MapOfControllers = make(map[string]BaseController)
 }
 
 type Controller interface {
@@ -28,4 +28,8 @@ func (baseController *BaseController) Render() {
 func (baseController BaseController) RegisterController(name string) {
 	MapOfControllers[name] = baseController
 	fmt.Println(MapOfControllers)
+}
+
+func (baseController BaseController) GetMapOfController() (map[string]BaseController){
+	return MapOfControllers
 }
