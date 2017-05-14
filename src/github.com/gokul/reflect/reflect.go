@@ -14,6 +14,9 @@ import (
 	"strings"
 	//"go/types"
 	//"go/importer"
+	"go/types"
+	"fmt"
+	"go/importer"
 )
 
 type controllerSpec struct {
@@ -43,6 +46,7 @@ func ScanAppsDirectory(configuration map[string]string) {
 
 func makeControllers(srcRoot string, controllerPath string) {
 	log.Debugln("Entering the makeControllers method")
+	astf := make([]*ast.File, 0)
 
 	structMap := make(map[string]reflect.Type)
 	log.Debugln("map is ", structMap)
@@ -58,25 +62,72 @@ func makeControllers(srcRoot string, controllerPath string) {
 		return
 	}
 
+	kPathBaseController := filepath.Join(srcRoot, "gokul","controller")
+	fsetBaseController := token.NewFileSet()
+
+	pkgsBaseController, e := parser.ParseDir(fsetBaseController, kPathBaseController, func(f os.FileInfo) bool {
+		return !f.IsDir() && !strings.HasPrefix(f.Name(), ".") && strings.HasSuffix(f.Name(), ".go")
+	}, 0)
+	if e != nil {
+		log.Debugln(e)
+		return
+	}
+	for _, pkg := range pkgsBaseController {
+		fmt.Printf("package %v\n", pkg.Name)
+		for fn, f := range pkg.Files {
+			fmt.Printf("file %v\n", fn)
+			astf = append(astf, f)
+		}
+	}
+
+
+
+	config := &types.Config{
+		Error: func(e error) {
+			fmt.Println(e)
+		},
+		Importer: importer.Default(),
+	}
+	info := types.Info{
+
+		Types: make(map[ast.Expr]types.TypeAndValue),
+		Defs:  make(map[*ast.Ident]types.Object),
+		Uses:  make(map[*ast.Ident]types.Object),
+
+	}
+	pkg, e := config.Check(kPath, fset, astf, &info)
+	if e != nil {
+		fmt.Println("Is there any errror %v",e)
+	}
+	fmt.Printf("types.Config.Check got %v\n", pkg.String())
+
+
 	log.Debugln("parsed package map is :: ", pkgs)
 	for _, pkg := range pkgs {
 		if pkg.Name == "controller" {
 			log.Debugln("package name is ", pkg.Name)
-			processPackage(pkg, pkg.Name)
+			processPackage(pkg, pkg.Name, &info)
 
 		}
 	}
+
+
+
 }
 
-func processPackage(pkg *ast.Package, importPkgName string){
-	printASTVisitor := &PrintASTVisitor{}
+func processPackage(pkg *ast.Package, importPkgName string, info *types.Info){
+	printASTVisitor := &PrintASTVisitor{info}
 	controllers := make([]string,0)
+	printASTVisitor.cntrlSpec.packageControllers = make(map[string][]string)
+	printASTVisitor.cntrlSpec.ControllerName = make([]string, 0)
+	printASTVisitor.cntrlSpec.PackageName=	make([]string, 0)
 	printASTVisitor.cntrlSpec.packageControllers[importPkgName] = controllers
 	ast.Walk(printASTVisitor, pkg)
 
 }
 
 type PrintASTVisitor struct {
+	info *types.Info
 	cntrlSpec controllerSpec
 }
 
@@ -88,18 +139,17 @@ func (v *PrintASTVisitor) Visit(node ast.Node) ast.Visitor {
 			{
 				log.Debugln("Name  of struct is :: " + kk.Name.Name)
 				structType := kk.Type.(*ast.StructType)
-				log.Debugln("hi there %v\n", structType)
+				log.Debugln("hi there", structType.Struct)
 				for _, field := range structType.Fields.List {
 					log.Debugln(reflect.TypeOf(field.Type), " name is ", field.Names)
 				}
-				cntrlSpec := &controllerSpec{ControllerName: make([]string,0) , PackageName: make([]string, 0)}
 
-				log.Debugln("ControllerSpec is :: ", cntrlSpec)
+				log.Debugln("ControllerSpec is :: ", v.cntrlSpec)
 				tmpl, err := template.New("test").Parse(MAIN)
 				if err != nil {
 					panic(err)
 				}
-				err = tmpl.Execute(os.Stdout, cntrlSpec)
+				err = tmpl.Execute(os.Stdout, v.cntrlSpec)
 				if err != nil {
 					panic(err)
 				}
