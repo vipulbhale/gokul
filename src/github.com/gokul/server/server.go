@@ -87,7 +87,6 @@ func Run(s *server) {
 	var network string
 	var err error
 
-	log.Debug("Map of all controllers ", baseControllers.GetMapOfController())
 	//address := s.ip + ":" + strconv.Itoa(s.port)
 	address := s.cfg["ip.address"] + ":" + s.cfg["server.port"]
 
