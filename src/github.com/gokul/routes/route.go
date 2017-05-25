@@ -35,14 +35,14 @@ type route struct {
 	method     string
 }
 
-func NewRoute(url string, controller string, method string) (r *route) {
-	return &route{url: url, controller: controller, method: method}
-}
-
-func AddRouteToRepo(r *route) {
-	routeRepo = make(map[string]*route)
-	routeRepo[r.url] = r
-}
+//func NewRoute(url string, controller string, method string) (r *route) {
+//	return &route{url: url, controller: controller, method: method}
+//}
+//
+//func AddRouteToRepo(r *route) {
+//	routeRepo = make(map[string]*route)
+//	routeRepo[r.url] = r
+//}
 
 func (r *route) GetURL() string {
 	return r.url
