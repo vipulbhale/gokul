@@ -1,4 +1,5 @@
-package main
+package cmd
+
 
 var cmdDeploy = &Command{
 	UsageLine: "run [import path] [run mode] [port]",
@@ -21,9 +22,9 @@ You can set a port as an optional third parameter.  For example:
 }
 
 func init() {
-	commands.Execute = deployApp
+	cmdDeploy.Execute = deployApp
 }
 
-func deployApp(){
+func deployApp(args []string){
 
 }

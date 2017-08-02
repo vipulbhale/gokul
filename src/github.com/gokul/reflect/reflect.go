@@ -124,12 +124,10 @@ func makeControllers(srcRoot string) {
 	//astf := make([]*ast.File, 0)
 	var allNamed []*types.Object
 
-
 	structMap := make(map[string]reflect.Type)
 	log.Debugln("map is ", structMap)
 	//kPath := filepath.Join(srcRoot, "apps", "demoapp", "controller")
 	kPath := filepath.Join(srcRoot)
-
 
 	fset := token.NewFileSet()
 
