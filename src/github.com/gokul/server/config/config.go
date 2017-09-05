@@ -37,7 +37,7 @@ func LoadConfigFile(cfgFile string) {
 
 	srcRoot, _ := os.Getwd()
 	log.Debugln("srcRoot is ", srcRoot)
-	srcRoot = filepath.Join(srcRoot, "gokul/src/", gokul.GOKUL_SRC_ROOT, "/")
+	srcRoot = filepath.Join(srcRoot, "src/", gokul.GOKUL_SRC_ROOT, "/")
 
 	log.Debugln("srcRoot is ", srcRoot)
 
