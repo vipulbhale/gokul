@@ -3,14 +3,14 @@ package routes
 import (
 	"bufio"
 	"fmt"
-	"github.com/gokul"
 	"io"
 	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
-	log "github.com/logrus"
 
+	"github.com/gokul"
+	log "github.com/sirupsen/logrus"
 )
 
 var (
@@ -35,14 +35,14 @@ type route struct {
 	method     string
 }
 
-func NewRoute(url string, controller string, method string) (r *route) {
-	return &route{url: url, controller: controller, method: method}
-}
-
-func AddRouteToRepo(r *route) {
-	routeRepo = make(map[string]*route)
-	routeRepo[r.url] = r
-}
+//func NewRoute(url string, controller string, method string) (r *route) {
+//	return &route{url: url, controller: controller, method: method}
+//}
+//
+//func AddRouteToRepo(r *route) {
+//	routeRepo = make(map[string]*route)
+//	routeRepo[r.url] = r
+//}
 
 func (r *route) GetURL() string {
 	return r.url
@@ -71,7 +71,7 @@ func GetRoute(url string, httpVerb string) (r *route) {
 	}
 
 	appSrcRoot, _ := os.Getwd()
-	appRouteCfgFile := filepath.Join(appSrcRoot, "gokul", "src" ,"github.com", gokul.APPS_SRC_ROOT, appContext, "/config/routes.cfg")
+	appRouteCfgFile := filepath.Join(appSrcRoot, "gokul", "src", "github.com", gokul.APPS_SRC_ROOT, appContext, "/config/routes.cfg")
 
 	log.Debug("appRouteCfgFile is :: ", appRouteCfgFile)
 

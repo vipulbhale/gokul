@@ -1,23 +1,58 @@
 package reflect
 
 import (
-	log "github.com/logrus"
+	"fmt"
 	"go/ast"
-	"go/token"
 	"go/parser"
-	"path/filepath"
-	"reflect"
+	"go/token"
+	"go/types"
 	"html/template"
 	"os"
+	"path/filepath"
+	"reflect"
 	"strings"
-	"go/types"
-	"fmt"
+
+	log "github.com/sirupsen/logrus"
 )
 
+var (
+	cntrlSpec      = new(controllerSpec)
+	packageNameMap = make(map[string]string)
+)
+
+const MAIN = `// GENERATED CODE - DO NOT EDIT
+package controllerwrapper
+
+import (
+	"reflect"{{ range $index, $packageName := .PackageName }}
+	"{{ $packageName }}"{{ end }}
+)
+
+var (
+	mapOfControllerNameToControllerObj = make(map[string]reflect.Type)
+)
+
+func RegisterControllers(){
+	{{range $index, $element := .ControllerName}}
+    		{{ $element | ToLower }} := {{ $element }}{}
+    		typeOfController := reflect.TypeOf({{ $element | ToLower }})
+    		mapOfControllerNameToControllerObj[typeOfController.Name()] = typeOfController
+	{{ end }}
+}
+
+func New(name string) (interface{}, bool) {
+	t, ok := mapOfControllerNameToControllerObj[name]
+	if !ok {
+		return nil, false
+	}
+	v := reflect.New(t)
+	return v.Interface(), true
+}
+`
+
 type controllerSpec struct {
-	ControllerName 	[]string
-	PackageName	string
-	packageControllers map[string][]string
+	ControllerName []string
+	PackageName    []string
 }
 
 func init() {
@@ -28,26 +63,72 @@ func init() {
 }
 
 func ScanAppsDirectory(configuration map[string]string) {
-	log.Debugln("Entering the ScanAppsDirectory")
-	log.Debugln("inputs are", configuration)
+	log.Debugln("Entering the ScanAppsDirectory.")
+	log.Debugln("inputs are :: ", configuration)
 
 	srcRoot, _ := os.Getwd()
-	log.Debugln("The srcRoot is ", srcRoot)
-	controllerPath := filepath.Join(srcRoot, "gokul", "src", "github.com", "gokul")
-	srcRoot = filepath.Join(srcRoot, "gokul", "src", "github.com")
-	log.Debugln("srcRoot is ", srcRoot)
-	makeControllers(srcRoot, controllerPath)
+	log.Debugln("The srcRoot is :: ", srcRoot)
+	//srcRelativeAppsHomeDirPath := filepath.Join("github.com", "apps")
+	appsHomeDirPath := filepath.Join(srcRoot, "src", "github.com", "apps")
+
+	directoryList := []string{}
+
+	err := filepath.Walk(appsHomeDirPath, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if info.IsDir() && info.Name() == "controller" {
+			log.Debugln("Path is ", path)
+			log.Debugln("Directory is ", path)
+			dir := filepath.Dir(path + "/" + info.Name())
+			log.Debugln("Dir is ", dir)
+			packagename := strings.Split(path, filepath.Join(srcRoot, "src"))[1]
+			packagename = strings.Replace(packagename, "/", "", 1)
+			log.Debugln("PackageName is ", packagename)
+			packageNameMap[packagename] = packagename
+			directoryList = append(directoryList, dir)
+		}
+		return nil
+	})
+
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Debugln("Found directories are ", directoryList)
+
+	for packageNameKey, _ := range packageNameMap {
+		cntrlSpec.PackageName = append(cntrlSpec.PackageName, packageNameKey)
+		log.Debugln("Package list is ", cntrlSpec.PackageName)
+	}
+
+	//srcRoot = filepath.Join(srcRoot, "gokul", "src", "github.com")
+	//log.Debugln("srcRoot is ", srcRoot)
+
+	for _, directoryController := range directoryList {
+		makeControllers(directoryController)
+	}
+
+	funcMap := template.FuncMap{
+		"ToLower": strings.ToLower,
+	}
+	tmpl, err := template.New("test").Funcs(funcMap).Parse(MAIN)
+	if err != nil {
+		panic(err)
+	}
+	err = tmpl.Execute(os.Stdout, cntrlSpec)
+	if err != nil {
+		panic(err)
+	}
 }
 
-func makeControllers(srcRoot string, controllerPath string) {
+func makeControllers(srcRoot string) {
 	log.Debugln("Entering the makeControllers method")
-	//astf := make([]*ast.File, 0)
 	var allNamed []*types.Object
-
 
 	structMap := make(map[string]reflect.Type)
 	log.Debugln("map is ", structMap)
-	kPath := filepath.Join(srcRoot, "apps", "demoapp", "controller")
+	kPath := filepath.Join(srcRoot)
+	log.Debugln("kpath is ", kPath)
 
 	fset := token.NewFileSet()
 
@@ -129,28 +210,25 @@ func makeControllers(srcRoot string, controllerPath string) {
 		}
 	}
 
-
-
 }
 
-func processPackage(pkg *ast.Package, packageName string){
+func processPackage(pkg *ast.Package, packageName string) {
 	log.Debugln("Entering the processPackage function")
 	log.Debugln(pkg.Name)
 	log.Debugln(pkg.Files)
 	printASTVisitor := &PrintASTVisitor{}
-	//printASTVisitor.info = info
-	controllers := make([]string,0)
-	printASTVisitor.cntrlSpec.packageControllers = make(map[string][]string)
-	printASTVisitor.cntrlSpec.ControllerName = make([]string, 0)
-	printASTVisitor.cntrlSpec.PackageName =	packageName
-	printASTVisitor.cntrlSpec.packageControllers[packageName] = controllers
+	//controllers := make([]string,0)
+	//printASTVisitor.cntrlSpec.packageControllers = make(map[string][]string)
+	//printASTVisitor.cntrlSpec.ControllerName = make([]string, 0)
+	//printASTVisitor.cntrlSpec.PackageName =	packageName
+	//printASTVisitor.cntrlSpec.packageControllers[packageName] = controllers
 	ast.Walk(printASTVisitor, pkg)
 
 }
 
 type PrintASTVisitor struct {
 	info *types.Info
-	cntrlSpec controllerSpec
+	//cntrlSpec controllerSpec
 }
 
 func (v *PrintASTVisitor) Visit(node ast.Node) ast.Visitor {
@@ -158,11 +236,11 @@ func (v *PrintASTVisitor) Visit(node ast.Node) ast.Visitor {
 	if node != nil {
 		switch kk := node.(type) {
 
-		case *ast.Package :
+		case *ast.Package:
 			{
 				fmt.Println(kk.Name)
 
-		}
+			}
 		case *ast.TypeSpec:
 			{
 				log.Debugln("Name  of struct is :: " + kk.Name.Name)
@@ -195,37 +273,25 @@ func (v *PrintASTVisitor) Visit(node ast.Node) ast.Visitor {
 					}()
 					if typeName == "BaseController" {
 						log.Debugln("I am the man ", pkgName, typeName)
-						v.cntrlSpec.ControllerName = append(v.cntrlSpec.ControllerName, kk.Name.Name)
-						log.Debugln("ControllerSpec is :: ", v.cntrlSpec)
+						//v.cntrlSpec.ControllerName = append(v.cntrlSpec.ControllerName, kk.Name.Name)
+						cntrlSpec.ControllerName = append(cntrlSpec.ControllerName, kk.Name.Name)
+
+						log.Debugln("ControllerSpec is :: ", cntrlSpec)
 
 					}
 
 				}
 
-
-				funcMap := template.FuncMap{
-					"ToLower": strings.ToLower,
-				}
-				tmpl, err := template.New("test").Funcs(funcMap).Parse(MAIN)
-				if err != nil {
-					panic(err)
-				}
-				err = tmpl.Execute(os.Stdout, v.cntrlSpec)
-				if err != nil {
-					panic(err)
-				}
 			}
-		case *ast.GenDecl:{
-			log.Debugln("Name  of struct is :: ", kk)
+		case *ast.GenDecl:
+			{
+				log.Debugln("Name  of struct is :: ", kk)
 
-
-		}
+			}
 		}
 	}
 	return v
 }
-
-
 
 // genSource renders the given template to produce source code, which it writes
 // to the given directory and file.
@@ -253,38 +319,6 @@ func (v *PrintASTVisitor) Visit(node ast.Node) ast.Visitor {
 //		revel.ERROR.Fatalf("Failed to write to file: %v", err)
 //	}
 //}
-
-const MAIN = `// GENERATED CODE - DO NOT EDIT
-package controllerwrapper
-
-import (
-	"reflect"
-	"github.com/gokul/controller/baseController"
-	"github.com/apps/
-)
-
-var (
-	mapOfControllerNameToControllerObj = make(map[string]reflect.Type)
-)
-
-func RegisterControllers(){
-	{{range $index, $element := .ControllerName}}
-    		{{ $element | ToLower }} := {{ $element }}{}
-    		typeOfController := reflect.TypeOf({{ $element | ToLower }})
-    		mapOfControllerNameToControllerObj[typeOfController.Name()] = typeOfController
-	{{ end }}
-}
-
-func New(name string) (interface{}, bool) {
-	t, ok := mapOfControllerNameToControllerObj[name]
-	if !ok {
-		return nil, false
-	}
-	v := reflect.New(t)
-	return v.Interface(), true
-}
-
-`
 
 //// genSource renders the given template to produce source code, which it writes
 //// to the given directory and file.
