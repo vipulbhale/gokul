@@ -1,68 +1,126 @@
 package config
 
 import (
-	"bufio"
-	"github.com/gokul"
-	log "github.com/logrus"
-	"io"
+	"fmt"
 	"os"
 	"path/filepath"
-	"regexp"
+	"strconv"
 	"strings"
+
+	log "github.com/sirupsen/logrus"
+	"github.com/spf13/viper"
 )
 
 var (
-	regex         *regexp.Regexp
-	regexToIgnore *regexp.Regexp
-	//pattern = "[#].*\\n|\\s+\\n|\\S+[=]|.*\n"
-	pattern             = "[\\w.]+\\s+=\\s+[\\w]+"
-	patternToIgnoreLine = "^#+.*"
-	//srcRoot			string
+	// regex         *regexp.Regexp
+	// regexToIgnore *regexp.Regexp
+	// pattern             = "[\\w.]+\\s+=\\s+[\\w]+"
+	// patternToIgnoreLine = "^#+.*"
 	Cfg map[string]string
 )
 
 func init() {
-	regex, _ = regexp.Compile(pattern)
-	regexToIgnore, _ = regexp.Compile(patternToIgnoreLine)
+	// regex, _ = regexp.Compile(pattern)
+	// regexToIgnore, _ = regexp.Compile(patternToIgnoreLine)
 	// Output to stdout instead of the default stderr, could also be a file.
 	log.SetOutput(os.Stdout)
-
 	// Only log the debug severity or above.
 	log.SetLevel(log.DebugLevel)
 }
 
+// Load the config file for the server
+//
 func LoadConfigFile(cfgFile string) {
-	log.Debugln("Input to LoadConfigFile function is ", cfgFile)
-	serverConfig := make(map[string]string)
+	log.Debugln("Input to LoadConfigFile function is :: ", cfgFile)
+	serverConfig := loadConfig(cfgFile)
 
-	srcRoot, _ := os.Getwd()
-	log.Debugln("srcRoot is ", srcRoot)
-	srcRoot = filepath.Join(srcRoot, "src/", gokul.GOKUL_SRC_ROOT, "/")
+	// srcRoot, _ := os.Getwd()
 
-	log.Debugln("srcRoot is ", srcRoot)
+	// log.Debugln("srcRoot is ", srcRoot)
+	// srcRoot = filepath.Join(srcRoot, "src/", gokul.GOKUL_SRC_ROOT, "/")
+	// log.Debugln("srcRoot is where we want to be :: ", srcRoot)
+	// //inputFile, inputError := os.Open(srcRoot + "/" + cfgFile)
+	// inputFile, inputError := os.Open("server.cfg")
 
-	inputFile, inputError := os.Open(srcRoot + "/" + cfgFile)
-	if inputError != nil {
-		log.Fatal("Error reading the config file for server. Exiting.")
-		os.Exit(1)
-	}
-	defer inputFile.Close()
-	inputReader := bufio.NewReader(inputFile)
-	for {
-		inputString, readerError := inputReader.ReadString('\n')
-		if regexToIgnore.MatchString(inputString) {
-			continue
-		} else if regex.MatchString(inputString) {
-			pair := strings.Split(inputString, "=")
-			if len(pair) == 2 {
-				serverConfig[strings.TrimSpace(pair[0])] = strings.TrimSpace(pair[1])
-			}
-		}
-		if readerError == io.EOF {
-			break
-		}
-	}
+	// if inputError != nil {
+	// 	log.Fatal("Error reading the config file for server. Exiting.", inputError)
+	// 	os.Exit(1)
+	// }
+	// defer inputFile.Close()
+	// inputReader := bufio.NewReader(inputFile)
+	// for {
+	// 	inputString, readerError := inputReader.ReadString('\n')
+	// 	if regexToIgnore.MatchString(inputString) {
+	// 		continue
+	// 	} else if regex.MatchString(inputString) {
+	// 		pair := strings.Split(inputString, "=")
+	// 		if len(pair) == 2 {
+	// 			serverConfig[strings.TrimSpace(pair[0])] = strings.TrimSpace(pair[1])
+	// 		}
+	// 	}
+	// 	if readerError == io.EOF {
+	// 		break
+	// 	}
+	// }
 	if len(serverConfig) > 0 {
 		Cfg = serverConfig
 	}
+}
+
+func readConfig(filename, dirname string, defaults map[string]interface{}) (*viper.Viper, error) {
+	v := viper.New()
+	for key, value := range defaults {
+		v.SetDefault(key, value)
+	}
+	v.SetConfigName(filename)
+	// v.AddConfigPath("./src/github.com/gokul/server/config")
+	v.AddConfigPath(dirname)
+	v.AutomaticEnv()
+	err := v.ReadInConfig()
+	return v, err
+}
+
+// Load the config as default or from config file
+func loadConfig(cfgFileName string) map[string]string {
+	serverConfig := make(map[string]string)
+
+	filename := strings.TrimSuffix(filepath.Base(cfgFileName), filepath.Ext(filepath.Base(cfgFileName)))
+	dirname := filepath.Dir(cfgFileName)
+
+	log.Debugln("Directory of config file is :: ", dirname)
+	log.Debugln("Filename of config file is :: ", filename)
+
+	v1, err := readConfig(filename, dirname, map[string]interface{}{
+		"server": map[string]interface{}{
+			"address": "0.0.0.0",
+			"port":    9090,
+		},
+		"http": map[string]interface{}{
+			"read.timeout":   0,
+			"write.timeout":  0,
+			"maxrequestsize": 999999,
+		},
+		"logging": map[string]interface{}{
+			"level": "debug",
+		},
+		"apps" : map[string]interface{}{
+			"directory" : "apps",
+		},
+	})
+
+	if err != nil {
+		panic(fmt.Errorf("Error when reading config: %v\n", err))
+	}
+	log.Debugln("Configuration is :: ", v1)
+
+	serverConfig["server.port"] = strconv.Itoa(v1.Get("server.port").(int))
+	serverConfig["server.address"] = v1.Get("server.address").(string)
+	serverConfig["logging.level"] = v1.Get("logging.level").(string)
+	serverConfig["timeout.read"] = strconv.Itoa(v1.Get("http.read.timeout").(int))
+	serverConfig["timeout.write"] = strconv.Itoa(v1.Get("http.write.timeout").(int))
+	serverConfig["http.maxrequestsize"] = strconv.Itoa(v1.Get("http.maxrequestsize").(int))
+	serverConfig["apps.directory"] = v1.Get("apps.directory").(string)
+
+	log.Debugln("The config map created is :: ", serverConfig)
+	return serverConfig
 }

@@ -1,21 +1,22 @@
 package reflect
 
 import (
-	log "github.com/logrus"
+	"fmt"
 	"go/ast"
-	"go/token"
 	"go/parser"
-	"path/filepath"
-	"reflect"
+	"go/token"
+	"go/types"
 	"html/template"
 	"os"
+	"path/filepath"
+	"reflect"
 	"strings"
-	"go/types"
-	"fmt"
+
+	log "github.com/sirupsen/logrus"
 )
 
 var (
-	cntrlSpec = new(controllerSpec)
+	cntrlSpec      = new(controllerSpec)
 	packageNameMap = make(map[string]string)
 )
 
@@ -47,12 +48,11 @@ func New(name string) (interface{}, bool) {
 	v := reflect.New(t)
 	return v.Interface(), true
 }
-
 `
 
 type controllerSpec struct {
-	ControllerName 	[]string
-	PackageName	[]string
+	ControllerName []string
+	PackageName    []string
 }
 
 func init() {
@@ -63,30 +63,32 @@ func init() {
 }
 
 func ScanAppsDirectory(configuration map[string]string) {
-	log.Debugln("Entering the ScanAppsDirectory")
-	log.Debugln("inputs are", configuration)
+	log.Debugln("Entering the ScanAppsDirectory.")
+	log.Debugln("inputs are :: ", configuration)
 
 	srcRoot, _ := os.Getwd()
-	log.Debugln("The srcRoot is ", srcRoot)
+	log.Debugln("The srcRoot is :: ", srcRoot)
 	//srcRelativeAppsHomeDirPath := filepath.Join("github.com", "apps")
-	appsHomeDirPath := filepath.Join(srcRoot, "gokul", "src", "github.com", "apps")
+	appsHomeDirPath := filepath.Join(srcRoot, "src", "github.com", "apps")
 
 	directoryList := []string{}
 
-
-	err := filepath.Walk(appsHomeDirPath, func(path string, info os.FileInfo, err error)  error {
+	err := filepath.Walk(appsHomeDirPath, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
 		if info.IsDir() && info.Name() == "controller" {
-			log.Debugln("Directory is ", info.Name(), path)
-			dir := filepath.Dir(path+"/"+info.Name())
-			packagename := strings.Split(path,filepath.Join(srcRoot, "gokul", "src"))[1]
-			packagename = strings.Replace(packagename, "/","", 1)
+			log.Debugln("Path is ", path)
+			log.Debugln("Directory is ", path)
+			dir := filepath.Dir(path + "/" + info.Name())
+			log.Debugln("Dir is ", dir)
+			packagename := strings.Split(path, filepath.Join(srcRoot, "src"))[1]
+			packagename = strings.Replace(packagename, "/", "", 1)
+			log.Debugln("PackageName is ", packagename)
 			packageNameMap[packagename] = packagename
 			directoryList = append(directoryList, dir)
 		}
-		return  nil
+		return nil
 	})
 
 	if err != nil {
@@ -102,7 +104,7 @@ func ScanAppsDirectory(configuration map[string]string) {
 	//srcRoot = filepath.Join(srcRoot, "gokul", "src", "github.com")
 	//log.Debugln("srcRoot is ", srcRoot)
 
-	for _ , directoryController := range directoryList {
+	for _, directoryController := range directoryList {
 		makeControllers(directoryController)
 	}
 
@@ -121,13 +123,12 @@ func ScanAppsDirectory(configuration map[string]string) {
 
 func makeControllers(srcRoot string) {
 	log.Debugln("Entering the makeControllers method")
-	//astf := make([]*ast.File, 0)
 	var allNamed []*types.Object
 
 	structMap := make(map[string]reflect.Type)
 	log.Debugln("map is ", structMap)
-	//kPath := filepath.Join(srcRoot, "apps", "demoapp", "controller")
 	kPath := filepath.Join(srcRoot)
+	log.Debugln("kpath is ", kPath)
 
 	fset := token.NewFileSet()
 
@@ -209,11 +210,9 @@ func makeControllers(srcRoot string) {
 		}
 	}
 
-
-
 }
 
-func processPackage(pkg *ast.Package, packageName string){
+func processPackage(pkg *ast.Package, packageName string) {
 	log.Debugln("Entering the processPackage function")
 	log.Debugln(pkg.Name)
 	log.Debugln(pkg.Files)
@@ -237,11 +236,11 @@ func (v *PrintASTVisitor) Visit(node ast.Node) ast.Visitor {
 	if node != nil {
 		switch kk := node.(type) {
 
-		case *ast.Package :
+		case *ast.Package:
 			{
 				fmt.Println(kk.Name)
 
-		}
+			}
 		case *ast.TypeSpec:
 			{
 				log.Debugln("Name  of struct is :: " + kk.Name.Name)
@@ -283,19 +282,16 @@ func (v *PrintASTVisitor) Visit(node ast.Node) ast.Visitor {
 
 				}
 
+			}
+		case *ast.GenDecl:
+			{
+				log.Debugln("Name  of struct is :: ", kk)
 
 			}
-		case *ast.GenDecl:{
-			log.Debugln("Name  of struct is :: ", kk)
-
-
-		}
 		}
 	}
 	return v
 }
-
-
 
 // genSource renders the given template to produce source code, which it writes
 // to the given directory and file.
@@ -323,8 +319,6 @@ func (v *PrintASTVisitor) Visit(node ast.Node) ast.Visitor {
 //		revel.ERROR.Fatalf("Failed to write to file: %v", err)
 //	}
 //}
-
-
 
 //// genSource renders the given template to produce source code, which it writes
 //// to the given directory and file.

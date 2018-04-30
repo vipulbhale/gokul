@@ -3,23 +3,25 @@ package gokul
 import (
 	"net/http"
 	//"time"
-	"fmt"
-	goreflect "github.com/gokul/reflect"
-	"github.com/gokul/routes"
-	"github.com/gokul/server/config"
-	log "github.com/logrus"
+
 	"net"
 	"os"
 	"reflect"
 	"strconv"
 	"time"
+
 	"github.com/gokul/controller"
+	goreflect "github.com/gokul/reflect"
+	"github.com/gokul/routes"
+	"github.com/gokul/server/config"
+	log "github.com/sirupsen/logrus"
 )
 
 var (
-	httpServer *http.Server
+	httpServer      *http.Server
 	baseControllers *controller.BaseController
 )
+
 func init() {
 	// Output to stdout instead of the default stderr, could also be a file.
 	log.SetOutput(os.Stdout)
@@ -29,12 +31,7 @@ func init() {
 	baseControllers = new(controller.BaseController)
 }
 
-
-
 type server struct {
-	//ip    string
-	//vhost string
-	//port  int
 	cfg map[string]string
 }
 
@@ -42,13 +39,17 @@ func (s *server) GetConfig() map[string]string {
 	return s.cfg
 }
 
-func NewServer() *server {
-	config.LoadConfigFile("server/config/server.cfg")
+// Creates the new server
+func NewServer(cfgFileLocation string) *server {
+	log.Debugln("Entering the NewServer constructor.")
+	if len(cfgFileLocation) > 0 {
+		config.LoadConfigFile(cfgFileLocation)
+	}
 	return &server{cfg: config.Cfg}
 }
 
 func (s *server) ScanAppsForControllers() {
-	log.Debugln("Entering the ")
+	log.Debugln("Entering the ScanAppsForController function.")
 	goreflect.ScanAppsDirectory(s.cfg)
 }
 
@@ -66,16 +67,14 @@ func handle(w http.ResponseWriter, r *http.Request) {
 	if maxRequestSize > 0 {
 		r.Body = http.MaxBytesReader(w, r.Body, maxRequestSize)
 	}
-	//fmt.Println(r.Method, r.URL)
 	if r.URL.Path != "/favicon.ico" {
 		if filteredRoute := routes.GetRoute(r.URL.Path, r.Method); filteredRoute != nil {
-			fmt.Printf("Filtered route is %v\n", *filteredRoute)
+			log.Debugln("Filtered route is %v\n", *filteredRoute)
 			//path := strings.Split(r.URL.Path, "/")
 			log.Debug(filteredRoute.GetController())
 			log.Debug(filteredRoute.GetMethod())
 			log.Debug(filteredRoute.GetURL())
 			log.Debug(reflect.ValueOf(filteredRoute.GetController()))
-
 		}
 	}
 	log.Debug("Request URL is :: " + r.URL.Path)
@@ -87,18 +86,16 @@ func Run(s *server) {
 	var network string
 	var err error
 
-	//address := s.ip + ":" + strconv.Itoa(s.port)
-	address := s.cfg["ip.address"] + ":" + s.cfg["server.port"]
-
+	address := s.cfg["server.address"] + ":" + s.cfg["server.port"]
 	network = "tcp"
 
 	if readTimeOut, err = strconv.ParseInt(config.Cfg["timeout.read"], 10, 64); err != nil {
-		fmt.Println("Error parsing the read timeout. Exiting")
+		log.Fatalln("Error parsing the read timeout. Exiting...")
 		os.Exit(1)
 	}
 
 	if writeTimeOut, err = strconv.ParseInt(config.Cfg["timeout.write"], 10, 64); err != nil {
-		fmt.Println("Error parsing the write timeout. Exiting")
+		log.Fatalln("Error parsing the write timeout. Exiting...")
 		os.Exit(1)
 	}
 
