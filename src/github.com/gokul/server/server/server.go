@@ -48,9 +48,13 @@ func NewServer(cfgFileLocation string) *server {
 	return &server{cfg: config.Cfg}
 }
 
-func (s *server) ScanAppsForControllers() {
+func (s *server) ScanAppsForControllers(appName string) {
 	log.Debugln("Entering the ScanAppsForController function.")
-	goreflect.ScanAppsDirectory(s.cfg)
+	if len(appName) != 0 {
+		goreflect.ScanAppsDirectory(config.Cfg, appName)
+	} else {
+		goreflect.ScanAppsDirectory(config.Cfg, "")
+	}
 }
 
 // This method handles all requests.
@@ -67,17 +71,19 @@ func handle(w http.ResponseWriter, r *http.Request) {
 	if maxRequestSize > 0 {
 		r.Body = http.MaxBytesReader(w, r.Body, maxRequestSize)
 	}
+
+	log.Debug("Request URL is :: " + r.URL.Path)
+
 	if r.URL.Path != "/favicon.ico" {
 		if filteredRoute := routes.GetRoute(r.URL.Path, r.Method); filteredRoute != nil {
 			log.Debugln("Filtered route is %v\n", *filteredRoute)
 			//path := strings.Split(r.URL.Path, "/")
-			log.Debug(filteredRoute.GetController())
-			log.Debug(filteredRoute.GetMethod())
-			log.Debug(filteredRoute.GetURL())
-			log.Debug(reflect.ValueOf(filteredRoute.GetController()))
+			log.Debugln(filteredRoute.GetController())
+			log.Debugln(filteredRoute.GetMethod())
+			log.Debugln(filteredRoute.GetURL())
+			log.Debugln(reflect.ValueOf(filteredRoute.GetController()))
 		}
 	}
-	log.Debug("Request URL is :: " + r.URL.Path)
 }
 
 func Run(s *server) {
@@ -90,6 +96,7 @@ func Run(s *server) {
 	network = "tcp"
 
 	if readTimeOut, err = strconv.ParseInt(config.Cfg["timeout.read"], 10, 64); err != nil {
+		log.Debugln("The value of readtimeout received is ", config.Cfg["timeout.read"])
 		log.Fatalln("Error parsing the read timeout. Exiting...")
 		os.Exit(1)
 	}

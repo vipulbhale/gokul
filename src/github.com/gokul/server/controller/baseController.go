@@ -4,8 +4,6 @@ import (
 	"fmt"
 )
 
-
-
 type Controller interface {
 	Render()
 }

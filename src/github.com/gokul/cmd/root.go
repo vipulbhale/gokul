@@ -17,10 +17,6 @@ var (
 
 func init() {
 	cobra.OnInitialize(initConfig)
-	// RootCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "", "config file (default is $HOME/.cobra.yaml)")
-
-	// RootCmd.PersistentFlags().StringVarP(&projectBase, "projectbase", "b", "", "base project directory eg. github.com/spf13/")
-	// viper.BindPFlag("projectbase", RootCmd.PersistentFlags().Lookup("projectbase"))
 }
 
 var RootCmd = &cobra.Command{
