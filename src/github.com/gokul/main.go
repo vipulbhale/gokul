@@ -24,5 +24,7 @@ func init() {
 }
 
 func main() {
+	log.Debugln("After making changes current GOPATH is ", os.Getenv("GOPATH"))
 	cmd.Execute(VERSION)
+	log.Debugln("After making changes current GOPATH is ", os.Getenv("GOPATH"))
 }

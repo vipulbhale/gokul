@@ -8,4 +8,4 @@ http:
   write.timeout: 0
   maxrequestsize: 999999
 apps:
-  directory: apps
+  directory: /Users/vipul/Documents/Code/go/workspaces/gokul/src/github.com/apps

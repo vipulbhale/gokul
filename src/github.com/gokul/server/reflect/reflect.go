@@ -62,14 +62,13 @@ func init() {
 	log.SetLevel(log.DebugLevel)
 }
 
-func ScanAppsDirectory(configuration map[string]string) {
+func ScanAppsDirectory(configuration map[string]string, appName string) {
 	log.Debugln("Entering the ScanAppsDirectory.")
 	log.Debugln("inputs are :: ", configuration)
-
-	srcRoot, _ := os.Getwd()
-	log.Debugln("The srcRoot is :: ", srcRoot)
-	//srcRelativeAppsHomeDirPath := filepath.Join("github.com", "apps")
-	appsHomeDirPath := filepath.Join(srcRoot, "src", "github.com", "apps")
+	var appsHomeDirPath string
+	// srcRoot, _ := os.Getwd()
+	// log.Debugln("The srcRoot is :: ", srcRoot)
+	appsHomeDirPath = filepath.Join(configuration["apps.directory"])
 
 	directoryList := []string{}
 
@@ -82,7 +81,8 @@ func ScanAppsDirectory(configuration map[string]string) {
 			log.Debugln("Directory is ", path)
 			dir := filepath.Dir(path + "/" + info.Name())
 			log.Debugln("Dir is ", dir)
-			packagename := strings.Split(path, filepath.Join(srcRoot, "src"))[1]
+			// packagename := strings.Split(path, filepath.Join(srcRoot, "src"))[1]
+			packagename := strings.Split(path, appsHomeDirPath)[1]
 			packagename = strings.Replace(packagename, "/", "", 1)
 			log.Debugln("PackageName is ", packagename)
 			packageNameMap[packagename] = packagename
@@ -115,10 +115,20 @@ func ScanAppsDirectory(configuration map[string]string) {
 	if err != nil {
 		panic(err)
 	}
-	err = tmpl.Execute(os.Stdout, cntrlSpec)
+	outputFileName := filepath.Join(configuration["apps.directory"], "controller", "controllerRegistry.go")
+	outputFile, outputError := os.Create(outputFileName)
+
+	if outputError != nil {
+		log.Fatalln("An error occurred with file creation", outputFileName)
+		panic(outputError)
+	}
+
+	defer outputFile.Close()
+	err = tmpl.Execute(outputFile, cntrlSpec)
 	if err != nil {
 		panic(err)
 	}
+
 }
 
 func makeControllers(srcRoot string) {
