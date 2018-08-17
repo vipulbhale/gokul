@@ -56,7 +56,7 @@ func main(){
 	log.Debug("Scanning an app for controllers")
 	//appServer.ScanAppsForControllers("")
 	log.Debug("Run the server")
-	gokul.Run(appServer)
+	server.Run(appServer)
 }
 `
 
