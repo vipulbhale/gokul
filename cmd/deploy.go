@@ -27,23 +27,14 @@ var cmdDeploy = &cobra.Command{
 	Run:   deployApp,
 }
 
-func deployApp(cmd *cobra.Command, args []string) {
-	log.Debugln("Deploying the apps")
-	log.Debugln("Scanning all existing apps for controllers")
-	if len(CfgFileLocation) > 0 {
-		config.LoadConfigFile(CfgFileLocation)
-	} else {
-		CfgFileLocation = filepath.Join(AppDirName, "src", "github.com", AppName, "config", "server.yml")
-		config.LoadConfigFile(CfgFileLocation)
-	}
-
-	goPath, err := exec.LookPath("go")
+func executeOSCommand(commandString string, parameters string) {
+	goPath, err := exec.LookPath(commandString)
 	if err != nil {
 		log.Fatalln("Error while getting the path of the go binary", err)
 	}
 	log.Debug("The gopath is ", goPath)
 
-	command := exec.Command("go", "get", "-u", "github.com/vipulbhale/gokul", "github.com/sirupsen/logrus")
+	command := exec.Command(goPath, parameters)
 	command.Env = []string{"GOPATH=" + filepath.Join(AppDirName), "PATH=" + os.Getenv("PATH")}
 	stderr, err := command.StderrPipe()
 	if err != nil {
@@ -60,6 +51,20 @@ func deployApp(cmd *cobra.Command, args []string) {
 	if err := command.Wait(); err != nil {
 		log.Fatal(err)
 	}
+}
+
+func deployApp(cmd *cobra.Command, args []string) {
+	log.Debugln("Deploying the apps")
+	log.Debugln("Scanning all existing apps for controllers")
+	if len(CfgFileLocation) > 0 {
+		config.LoadConfigFile(CfgFileLocation)
+	} else {
+		CfgFileLocation = filepath.Join(AppDirName, "src", "github.com", AppName, "config", "server.yml")
+		config.LoadConfigFile(CfgFileLocation)
+	}
+
+	executeOSCommand("go", "get -d github.com/vipulbhale/gokul/server")
+
 	// start scanning all controllers for the given app or apps directory
 	if len(AppName) != 0 {
 		goreflect.ScanAppsDirectory(config.Cfg, AppName)
