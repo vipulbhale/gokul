@@ -4,9 +4,9 @@ import (
 	"os"
 	"strings"
 
-	"github.com/gokul/server/appTemplates"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	"github.com/vipulbhale/gokul/server/apptemplates"
 )
 
 func init() {

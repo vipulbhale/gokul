@@ -10,11 +10,11 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/gokul/controller"
-	goreflect "github.com/gokul/reflect"
-	"github.com/gokul/routes"
-	"github.com/gokul/server/config"
 	log "github.com/sirupsen/logrus"
+	"github.com/vipulbhale/gokul/server/config"
+	"github.com/vipulbhale/gokul/server/controller"
+	goreflect "github.com/vipulbhale/gokul/server/reflect"
+	"github.com/vipulbhale/gokul/server/routes"
 )
 
 var (
