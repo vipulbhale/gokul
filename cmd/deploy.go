@@ -7,10 +7,10 @@ import (
 	"os/exec"
 	"path/filepath"
 
-	"github.com/gokul/server/config"
-	goreflect "github.com/gokul/server/reflect"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	"github.com/vipulbhale/gokul/server/config"
+	goreflect "github.com/vipulbhale/gokul/server/reflect"
 )
 
 func init() {

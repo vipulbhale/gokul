@@ -8,7 +8,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/gokul/server/config"
+	"github.com/vipulbhale/gokul/server/config"
 
 	log "github.com/sirupsen/logrus"
 )
