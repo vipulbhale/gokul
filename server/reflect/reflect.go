@@ -21,27 +21,28 @@ var (
 )
 
 const MAIN = `// GENERATED CODE - DO NOT EDIT
-package controllerwrapper
+package controller
 
 import (
-	"reflect"{{ range $index, $packageName := .PackageName }}
-	"{{ $packageName }}"{{ end }}
+	"reflect"
+	//{{ range $index, $packageName := .PackageName }}
+	//"{{ $packageName }}"{{ end }}
 )
 
 var (
-	mapOfControllerNameToControllerObj = make(map[string]reflect.Type)
+	MapOfControllerNameToControllerObj = make(map[string]reflect.Type)
 )
 
 func RegisterControllers(){
 	{{range $index, $element := .ControllerName}}
     		{{ $element | ToLower }} := {{ $element }}{}
     		typeOfController := reflect.TypeOf({{ $element | ToLower }})
-    		mapOfControllerNameToControllerObj[typeOfController.Name()] = typeOfController
+    		MapOfControllerNameToControllerObj[typeOfController.Name()] = typeOfController
 	{{ end }}
 }
 
 func New(name string) (interface{}, bool) {
-	t, ok := mapOfControllerNameToControllerObj[name]
+	t, ok := MapOfControllerNameToControllerObj[name]
 	if !ok {
 		return nil, false
 	}
@@ -81,7 +82,6 @@ func ScanAppsDirectory(configuration map[string]string, appName string) {
 			log.Debugln("Directory is ", path)
 			dir := filepath.Dir(path + "/" + info.Name())
 			log.Debugln("Dir is ", dir)
-			// packagename := strings.Split(path, filepath.Join(srcRoot, "src"))[1]
 			packagename := strings.Split(path, appsHomeDirPath)[1]
 			packagename = strings.Replace(packagename, "/", "", 1)
 			log.Debugln("PackageName is ", packagename)
@@ -101,9 +101,6 @@ func ScanAppsDirectory(configuration map[string]string, appName string) {
 		log.Debugln("Package list is ", cntrlSpec.PackageName)
 	}
 
-	//srcRoot = filepath.Join(srcRoot, "gokul", "src", "github.com")
-	//log.Debugln("srcRoot is ", srcRoot)
-
 	for _, directoryController := range directoryList {
 		makeControllers(directoryController)
 	}
@@ -115,7 +112,7 @@ func ScanAppsDirectory(configuration map[string]string, appName string) {
 	if err != nil {
 		panic(err)
 	}
-	outputFileName := filepath.Join(configuration["apps.directory"], "controller", "controllerRegistry.go")
+	outputFileName := filepath.Join(configuration["apps.directory"], "controller", "controllerregistry.go")
 	outputFile, outputError := os.Create(outputFileName)
 
 	if outputError != nil {
@@ -282,7 +279,7 @@ func (v *PrintASTVisitor) Visit(node ast.Node) ast.Visitor {
 						return "", ""
 					}()
 					if typeName == "BaseController" {
-						log.Debugln("I am the man ", pkgName, typeName)
+						log.Debugln("The package name is ", pkgName, typeName)
 						//v.cntrlSpec.ControllerName = append(v.cntrlSpec.ControllerName, kk.Name.Name)
 						cntrlSpec.ControllerName = append(cntrlSpec.ControllerName, kk.Name.Name)
 

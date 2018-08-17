@@ -1,4 +1,4 @@
-package gokul
+package server
 
 import (
 	"net/http"
