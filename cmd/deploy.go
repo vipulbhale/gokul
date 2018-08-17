@@ -27,14 +27,14 @@ var cmdDeploy = &cobra.Command{
 	Run:   deployApp,
 }
 
-func executeOSCommand(commandString string, parameters string) {
+func executeOSCommand(commandString string, parameters ...string) {
 	goPath, err := exec.LookPath(commandString)
 	if err != nil {
 		log.Fatalln("Error while getting the path of the go binary", err)
 	}
 	log.Debug("The gopath is ", goPath)
 
-	command := exec.Command(goPath, parameters)
+	command := exec.Command(goPath, parameters...)
 	command.Env = []string{"GOPATH=" + filepath.Join(AppDirName), "PATH=" + os.Getenv("PATH")}
 	stderr, err := command.StderrPipe()
 	if err != nil {
@@ -63,7 +63,7 @@ func deployApp(cmd *cobra.Command, args []string) {
 		config.LoadConfigFile(CfgFileLocation)
 	}
 
-	executeOSCommand("go", "get -d github.com/vipulbhale/gokul/server")
+	executeOSCommand("go", "get", "-d", "github.com/vipulbhale/gokul/server")
 
 	// start scanning all controllers for the given app or apps directory
 	if len(AppName) != 0 {

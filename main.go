@@ -6,7 +6,7 @@ import (
 
 	log "github.com/sirupsen/logrus"
 	//"flag"
-	"github.com/gokul/cmd"
+	"github.com/vipulbhale/gokul/cmd"
 )
 
 var (

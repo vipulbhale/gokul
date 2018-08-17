@@ -37,7 +37,8 @@ import (
 	// "github.com/{{.AppNameForTemplate}}/server"
 	// "github.com/{{.AppNameForTemplate}}/config"
 	"github.com/vipulbhale/gokul/server"
-	"github.com/vipulbhale/gokul/config"
+	"github.com/vipulbhale/gokul/server/config"
+	"github.com/{{.AppNameForTemplate}}/controller"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -50,33 +51,51 @@ func main(){
 		config.LoadConfigFile(cfgFileLocation)
 	}
 
+	controller.RegisterControllers()
 	appServer := server.NewServer(cfgFileLocation)
 	log.Debug("Scanning an app for controllers")
-	appServer.ScanAppsForControllers("")
+	//appServer.ScanAppsForControllers("")
 	log.Debug("Run the server")
 	gokul.Run(appServer)
 }
 `
 
-const CONTROLLER_TEMPLATE = `package basecontroller
+// const CONTROLLER_TEMPLATE = `package basecontroller
+
+// import (
+// 	"fmt"
+// )
+
+// type Controller interface {
+// 	Render()
+// }
+
+// type BaseController struct {
+// 	Controller
+
+// }
+
+// func (baseController *BaseController) Render() {
+// 	fmt.Println("Inside render method")
+// }
+// `
+
+const CONTROLLER_TEMPLATE = `package controller
 
 import (
 	"fmt"
+
+	controller2 "github.com/vipulbhale/gokul/server/controller"
 )
 
-type Controller interface {
-	Render()
+type DemoController struct {
+	*controller2.BaseController
 }
 
-type BaseController struct {
-	Controller
-
-}
-
-func (baseController *BaseController) Render() {
-	fmt.Println("Inside render method")
-}
-`
+func (d *DemoController) Demo() {
+	fmt.Print("Hi there")
+	d.Render()
+}`
 
 const ROUTES_TEMPLATE = `
 package routes
@@ -212,10 +231,10 @@ import (
 	"github.com/{{.AppNameForTemplate}}/config"
 
 
-	"github.com/vipulbhale/gokul/controller"
-	goreflect "github.com/vipulbhale/gokul/reflect"
-	"github.com/vipulbhale/gokul/routes"
-	"github.com/vipulbhale/gokul/config"
+	"github.com/vipulbhale/gokul/server/controller"
+	goreflect "github.com/vipulbhale/gokul/server/reflect"
+	"github.com/vipulbhale/gokul/server/routes"
+	"github.com/vipulbhale/gokul/server/config"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -665,7 +684,7 @@ func (v *PrintASTVisitor) Visit(node ast.Node) ast.Visitor {
 func CreateTemplates(dirname, appName, cfgFileLocation string) {
 	log.Debugln("Entering the CreateTemplates method.")
 
-	// writeToFile(filepath.Join(dirname, "src", "github.com", appName, "controller"), "controller.go", appName, cfgFileLocation, CONTROLLER_TEMPLATE)
+	writeToFile(filepath.Join(dirname, "src", "github.com", appName, "controller"), "controller.go", appName, cfgFileLocation, CONTROLLER_TEMPLATE)
 	// writeToFile(filepath.Join(dirname, "src", "github.com", appName, "routes"), "route.go", appName, cfgFileLocation, ROUTES_TEMPLATE)
 	// writeToFile(filepath.Join(dirname, "src", "github.com", appName, "server"), "server.go", appName, cfgFileLocation, SERVER_TEMPLATE)
 	// writeToFile(filepath.Join(dirname, "src", "github.com", appName, "config"), "config.go", appName, cfgFileLocation, SERVER_CONFIG_TEMPLATE)
