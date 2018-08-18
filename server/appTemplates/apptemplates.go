@@ -31,6 +31,10 @@ apps:
   directory: {{.ParentAppDirectory}}
 `
 
+const ROUTES_CFG_TEMPLATE = `
+GET             /demo           DemoController.Demo
+`
+
 const MAIN_PACKAGE = `package main
 import (
 	"fmt" 
@@ -670,6 +674,7 @@ func CreateTemplates(dirname, appName, cfgFileLocation string) {
 	// writeToFile(filepath.Join(dirname, "src", "github.com", appName, "server"), "server.go", appName, cfgFileLocation, SERVER_TEMPLATE)
 	// writeToFile(filepath.Join(dirname, "src", "github.com", appName, "config"), "config.go", appName, cfgFileLocation, SERVER_CONFIG_TEMPLATE)
 	writeToFile(filepath.Join(dirname, "src", "github.com", appName, "config"), "server.yml", appName, cfgFileLocation, CONFIG_FILE_TEMPLATE)
+	writeToFile(filepath.Join(dirname, "src", "github.com", appName, "config"), "route.cfg", appName, cfgFileLocation, ROUTES_CFG_TEMPLATE)
 
 	// writeToFileReflect(filepath.Join(dirname, "src", "github.com", appName, "reflect", "reflect.go"), GOKUL_REFLECT_TEMPLATE)
 
