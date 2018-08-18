@@ -33,7 +33,7 @@ var (
 	mapOfControllerNameToControllerObj = make(map[string]reflect.Type)
 )
 
-func RegisterControllers(){
+func RegisterControllers() map[string]reflect.Type{
 	{{range $index, $element := .ControllerName}}
     		{{ $element | ToLower }} := {{ $element }}{}
     		typeOfController := reflect.TypeOf({{ $element | ToLower }})
