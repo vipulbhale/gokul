@@ -30,19 +30,20 @@ import (
 )
 
 var (
-	MapOfControllerNameToControllerObj = make(map[string]reflect.Type)
+	mapOfControllerNameToControllerObj = make(map[string]reflect.Type)
 )
 
 func RegisterControllers(){
 	{{range $index, $element := .ControllerName}}
     		{{ $element | ToLower }} := {{ $element }}{}
     		typeOfController := reflect.TypeOf({{ $element | ToLower }})
-    		MapOfControllerNameToControllerObj[typeOfController.Name()] = typeOfController
+			mapOfControllerNameToControllerObj[typeOfController.Name()] = typeOfController
+			return mapOfControllerNameToControllerObj 
 	{{ end }}
 }
 
 func New(name string) (interface{}, bool) {
-	t, ok := MapOfControllerNameToControllerObj[name]
+	t, ok := mapOfControllerNameToControllerObj[name]
 	if !ok {
 		return nil, false
 	}

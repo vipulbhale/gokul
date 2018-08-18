@@ -55,10 +55,8 @@ func main(){
 		config.LoadConfigFile(cfgFileLocation)
 	}
 
-	controller.RegisterControllers()
-	appServer := server.NewServer(cfgFileLocation)
-	log.Debug("Scanning an app for controllers")
-	//appServer.ScanAppsForControllers("")
+	mapOfControllerNameToControllerObj := controller.RegisterControllers()
+	appServer := server.NewServer(cfgFileLocation,mapOfControllerNameToControllerObj)
 	log.Debug("Run the server")
 	server.Run(appServer)
 }
