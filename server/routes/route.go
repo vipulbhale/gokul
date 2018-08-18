@@ -73,7 +73,7 @@ func GetRoute(url string, httpVerb string) (r *route) {
 
 	// appSrcRoot, _ := os.Getwd()
 	// appRouteCfgFile := filepath.Join(appSrcRoot, "gokul", "src", "github.com", gokul.APPS_SRC_ROOT, appContext, "/config/routes.cfg")
-	appRouteCfgFile := filepath.Join(config.Cfg["apps.directory"], appContext, "/config/routes.cfg")
+	appRouteCfgFile := filepath.Join(config.Cfg["apps.directory"], "/config/routes.cfg")
 
 	log.Debug("appRouteCfgFile is :: ", appRouteCfgFile)
 
