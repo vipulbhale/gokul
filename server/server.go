@@ -18,8 +18,9 @@ import (
 )
 
 var (
-	httpServer      *http.Server
-	baseControllers *controller.BaseController
+	httpServer                       *http.Server
+	baseControllers                  *controller.BaseController
+	mapControllerNameToControllerObj map[string]reflect.Type
 )
 
 func init() {
@@ -40,11 +41,12 @@ func (s *server) GetConfig() map[string]string {
 }
 
 // Creates the new server
-func NewServer(cfgFileLocation string) *server {
+func NewServer(cfgFileLocation string, mapOfControllerNameToControllerObj map[string]reflect.Type) *server {
 	log.Debugln("Entering the NewServer constructor.")
 	if len(cfgFileLocation) > 0 {
 		config.LoadConfigFile(cfgFileLocation)
 	}
+	mapControllerNameToControllerObj = mapOfControllerNameToControllerObj
 	return &server{cfg: config.Cfg}
 }
 
@@ -82,6 +84,7 @@ func handle(w http.ResponseWriter, r *http.Request) {
 			log.Debugln(filteredRoute.GetMethod())
 			log.Debugln(filteredRoute.GetURL())
 			log.Debugln(reflect.ValueOf(filteredRoute.GetController()))
+			log.Debugln(mapControllerNameToControllerObj[filteredRoute.GetController()])
 		}
 	}
 }
