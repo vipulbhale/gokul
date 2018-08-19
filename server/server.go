@@ -85,7 +85,7 @@ func handle(w http.ResponseWriter, r *http.Request) {
 			log.Debugln(filteredRoute.GetURL())
 			log.Debugln(reflect.ValueOf(filteredRoute.GetController()))
 			log.Debugln("Controller type o:: ", mapControllerNameToControllerObj[filteredRoute.GetController()])
-			reflect.ValueOf(mapControllerNameToControllerObj[filteredRoute.GetController()]).MethodByName(filteredRoute.GetMethod()).Call([]reflect.Value{})
+			mapControllerNameToControllerObj[filteredRoute.GetController()].MethodByName(filteredRoute.GetMethod()).Call([]reflect.Value{})
 		}
 	}
 }
