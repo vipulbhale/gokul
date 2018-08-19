@@ -30,14 +30,14 @@ import (
 )
 
 var (
-	mapOfControllerNameToControllerObj = make(map[string]reflect.Type)
+	mapOfControllerNameToControllerObj = make(map[string]reflect.Value)
 )
 
-func RegisterControllers() map[string]reflect.Type{
+func RegisterControllers() map[string]reflect.Value{
 	{{range $index, $element := .ControllerName}}
-    		{{ $element | ToLower }} := {{ $element }}{}
+    		{{ $element | ToLower }} := new({{ $element }})
     		typeOfController := reflect.TypeOf({{ $element | ToLower }})
-			mapOfControllerNameToControllerObj[typeOfController.Name()] = typeOfController
+			mapOfControllerNameToControllerObj[typeOfController.Name()] = reflect.ValueOf({{ $element | ToLower }})
 			return mapOfControllerNameToControllerObj 
 	{{ end }}
 }
