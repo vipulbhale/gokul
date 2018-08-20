@@ -36,7 +36,7 @@ var (
 func RegisterControllers() map[string]reflect.Value{
 	{{range $index, $element := .ControllerName}}
     		{{ $element | ToLower }} := new({{ $element }})
-    		typeOfController := reflect.TypeOf({{ $element | ToLower }})
+    		typeOfController := reflect.TypeOf({{ $element }}{})
 			mapOfControllerNameToControllerObj[typeOfController.Name()] = reflect.ValueOf({{ $element | ToLower }})
 			return mapOfControllerNameToControllerObj 
 	{{ end }}
