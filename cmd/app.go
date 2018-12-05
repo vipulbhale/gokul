@@ -19,8 +19,10 @@ func init() {
 	// Get the app location with implicit app name parameter.
 	// App name is also equal to context root.
 	// Get the config location with server.yml location
+
+	//RootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.gokul.yaml)")
 	CmdApp.PersistentFlags().StringVarP(&AppDirName, "dir", "d", "", "Directory under which app needs to be run.")
-	CmdApp.PersistentFlags().StringVarP(&CfgFileLocation, "config", "c", "", "Config file location.")
+	CmdApp.PersistentFlags().StringVarP(&CfgFileLocation, "config", "c", "", "Config file location(default is $HOME/.gokul.yaml)")
 	CmdApp.PersistentFlags().StringVarP(&AppName, "name", "n", "", "App name. Will search for the same name in apps directory.")
 	viper.BindPFlag("config", CmdApp.PersistentFlags().Lookup("config"))
 	RootCmd.AddCommand(CmdApp)
