@@ -2,7 +2,6 @@ package server
 
 import (
 	"net/http"
-	//"time"
 
 	"net"
 	"os"
@@ -13,7 +12,6 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/vipulbhale/gokul/server/config"
 	"github.com/vipulbhale/gokul/server/controller"
-	goreflect "github.com/vipulbhale/gokul/server/reflect"
 	"github.com/vipulbhale/gokul/server/routes"
 )
 
@@ -50,15 +48,6 @@ func NewServer(cfgFileLocation string, mapOfControllerNameToControllerObj map[st
 	return &server{cfg: config.Cfg}
 }
 
-func (s *server) ScanAppsForControllers(appName string) {
-	log.Debugln("Entering the ScanAppsForController function.")
-	if len(appName) != 0 {
-		goreflect.ScanAppsDirectory(config.Cfg, appName)
-	} else {
-		goreflect.ScanAppsDirectory(config.Cfg, "")
-	}
-}
-
 // This method handles all requests.
 func handle(w http.ResponseWriter, r *http.Request) {
 	log.Debug("Inside the handle method for the request")
@@ -85,7 +74,8 @@ func handle(w http.ResponseWriter, r *http.Request) {
 			log.Debugln(filteredRoute.GetURL())
 			log.Debugln(reflect.ValueOf(filteredRoute.GetController()))
 			log.Debugln("Controller type o:: ", mapControllerNameToControllerObj[filteredRoute.GetController()])
-			mapControllerNameToControllerObj[filteredRoute.GetController()].MethodByName(filteredRoute.GetMethod()).Call([]reflect.Value{})
+			response := mapControllerNameToControllerObj[filteredRoute.GetController()].MethodByName(filteredRoute.GetMethod()).Call([]reflect.Value{})
+			log.Debugln("Response is %v", response)
 		}
 	}
 }
