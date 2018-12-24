@@ -63,7 +63,7 @@ func deployApp(cmd *cobra.Command, args []string) {
 		config.LoadConfigFile(CfgFileLocation)
 	}
 
-	executeOSCommand("go", "get", "-d", "github.com/vipulbhale/gokul/server")
+	executeOSCommand("go", "get", "-u", "-d", "github.com/vipulbhale/gokul/server")
 	// start scanning all controllers for the given app or apps directory
 	if len(AppName) != 0 {
 		goreflect.ScanAppsDirectory(config.Cfg, AppName)
