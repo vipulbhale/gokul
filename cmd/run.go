@@ -11,7 +11,6 @@ import (
 )
 
 func init() {
-	// cmdRun.Flags().StringVarP(&AppDirName, "dir", "d", "", "Directory under which app needs to be run.")
 	CmdApp.AddCommand(cmdRun)
 }
 
@@ -33,20 +32,17 @@ func runApp(cmd *cobra.Command, args []string) {
 	// server.ScanAppsForControllers(AppName)
 	// log.Debug("Run the server")
 	//gokul.Run(server)
-	fmt.Println("hi there " + filepath.Join(AppDirName, "src", "github.com", AppName, "variables.env"))
+	log.Debugln("Location of variable.env is ::  {}", filepath.Join(AppDirName, "src", "github.com", AppName, "variables.env"))
 	// command := exec.Command("bash", "-c", "source", filepath.Join(AppDirName, "src", "github.com", AppName, "variables.env"))
 	goPath, err := exec.LookPath("go")
 	if err != nil {
 		log.Fatalln("Error while getting the path of the go binary", err)
 	}
-	log.Debug("The gopath is ", goPath)
+	log.Debug("The gopath is :: ", goPath)
 	command := exec.Command(goPath, "run", filepath.Join(AppDirName, "src", "github.com", AppName, "main.go"))
 	stdOutReader, errors := command.StdoutPipe()
-	// command.Env = append(os.Environ(),
-	// 	"GOPATH=$GOPATH:"+AppDirName,
-	// )
 	done := make(chan struct{})
-
+	log.Debugln("Running the main.go of app :: ", AppName)
 	scanner := bufio.NewScanner(stdOutReader)
 	go func() {
 		for scanner.Scan() {

@@ -12,56 +12,20 @@ import (
 )
 
 var (
-	// regex         *regexp.Regexp
-	// regexToIgnore *regexp.Regexp
-	// pattern             = "[\\w.]+\\s+=\\s+[\\w]+"
-	// patternToIgnoreLine = "^#+.*"
 	Cfg map[string]string
 )
 
 func init() {
-	// regex, _ = regexp.Compile(pattern)
-	// regexToIgnore, _ = regexp.Compile(patternToIgnoreLine)
-	// Output to stdout instead of the default stderr, could also be a file.
 	log.SetOutput(os.Stdout)
 	// Only log the debug severity or above.
 	log.SetLevel(log.DebugLevel)
 }
 
-// Load the config file for the server
-//
+// LoadConfigFile ... Load the config file for the server
 func LoadConfigFile(cfgFile string) {
 	log.Debugln("Input to LoadConfigFile function is :: ", cfgFile)
 	serverConfig := loadConfig(cfgFile)
 
-	// srcRoot, _ := os.Getwd()
-
-	// log.Debugln("srcRoot is ", srcRoot)
-	// srcRoot = filepath.Join(srcRoot, "src/", gokul.GOKUL_SRC_ROOT, "/")
-	// log.Debugln("srcRoot is where we want to be :: ", srcRoot)
-	// //inputFile, inputError := os.Open(srcRoot + "/" + cfgFile)
-	// inputFile, inputError := os.Open("server.cfg")
-
-	// if inputError != nil {
-	// 	log.Fatal("Error reading the config file for server. Exiting.", inputError)
-	// 	os.Exit(1)
-	// }
-	// defer inputFile.Close()
-	// inputReader := bufio.NewReader(inputFile)
-	// for {
-	// 	inputString, readerError := inputReader.ReadString('\n')
-	// 	if regexToIgnore.MatchString(inputString) {
-	// 		continue
-	// 	} else if regex.MatchString(inputString) {
-	// 		pair := strings.Split(inputString, "=")
-	// 		if len(pair) == 2 {
-	// 			serverConfig[strings.TrimSpace(pair[0])] = strings.TrimSpace(pair[1])
-	// 		}
-	// 	}
-	// 	if readerError == io.EOF {
-	// 		break
-	// 	}
-	// }
 	if len(serverConfig) > 0 {
 		Cfg = serverConfig
 	}
@@ -73,7 +37,6 @@ func readConfig(filename, dirname string, defaults map[string]interface{}) (*vip
 		v.SetDefault(key, value)
 	}
 	v.SetConfigName(filename)
-	// v.AddConfigPath("./src/github.com/gokul/server/config")
 	v.AddConfigPath(dirname)
 	v.AutomaticEnv()
 	err := v.ReadInConfig()
@@ -103,13 +66,13 @@ func loadConfig(cfgFileName string) map[string]string {
 		"logging": map[string]interface{}{
 			"level": "debug",
 		},
-		"apps" : map[string]interface{}{
-			"directory" : "apps",
+		"apps": map[string]interface{}{
+			"directory": "apps",
 		},
 	})
 
 	if err != nil {
-		panic(fmt.Errorf("Error when reading config: %v\n", err))
+		panic(fmt.Errorf("Error when reading config %v ", err))
 	}
 	log.Debugln("Configuration is :: ", v1)
 
