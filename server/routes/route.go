@@ -92,10 +92,9 @@ func GetRoute(url string, httpVerb string) (r *route) {
 			httpMethod := strings.TrimSpace(routeLine[0])
 			completeURL := strings.TrimSpace(routeLine[1])
 			controllerAndMethod := strings.TrimSpace(routeLine[2])
-			log.Info("HttpMethod %s :: completeURL %s :: controllerAndMethod :: %s\n", httpMethod, completeURL, controllerAndMethod)
+			log.Info("HttpMethod :: completeURL :: controllerAndMethod :: ", httpMethod, completeURL, controllerAndMethod)
 			if strings.Compare(appURL, completeURL) == 0 {
 				if strings.Compare(httpVerb, httpMethod) == 0 {
-					//r = new(route)
 					r.url = completeURL
 					r.method = strings.Split(controllerAndMethod, ".")[1]
 					r.controller = strings.Split(controllerAndMethod, ".")[0]

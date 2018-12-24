@@ -731,7 +731,7 @@ func writeToFile(dirName, fileName, appName, cfgFileLocation, content string) {
 	outputFile, outputError := os.Create(filepath.Join(dirName, fileName))
 
 	if outputError != nil {
-		log.Fatalln("An error occurred with file creation\n")
+		log.Fatalln("An error occurred with file creation")
 		panic(outputError)
 	}
 
