@@ -57,11 +57,12 @@ func NewServer(cfgFileLocation string, mapOfControllerNameToControllerObj map[st
 func handle(w http.ResponseWriter, r *http.Request) {
 	log.Debugln("Inside the handle method for the request")
 	log.Debugln("Accept header in the request is :: ", r.Header["Accept"][0])
+
 	var requestAcceptHeader = r.Header["Accept"][0]
 	var maxRequestSize int64
 	var err error
 
-	if maxRequestSize, err = strconv.ParseInt(config.Cfg["http.maxrequestsize"], 10, 64); err != nil {
+	if maxRequestSize, err = strconv.ParseInt(tempServer.GetConfig()["http.maxrequestsize"], 10, 64); err != nil {
 		log.Fatalln("Error parsing the maxrequestsize. Exiting...")
 		os.Exit(1)
 	}
@@ -155,20 +156,20 @@ func Run(s *server) {
 	var err error
 
 	//	templateFileLocation = filepath.Join(s.cfg["apps.directory"], "views")
-	address := s.cfg["server.address"] + ":" + s.cfg["server.port"]
+	address := s.GetConfig()["server.address"] + ":" + s.GetConfig()["server.port"]
 	network = "tcp"
 
-	log.Debugln("Read Timeout for the http connection for the service is :: ", config.Cfg["timeout.read"])
-	log.Debugln("Write Timeout for the http connection for the service is :: ", config.Cfg["timeout.write"])
+	log.Debugln("Read Timeout for the http connection for the service is :: ", s.GetConfig()["timeout.read"])
+	log.Debugln("Write Timeout for the http connection for the service is :: ", s.GetConfig()["timeout.write"])
 
-	if readTimeOut, err = strconv.ParseInt(config.Cfg["timeout.read"], 10, 64); err != nil {
-		log.Debugln("The value of readtimeout received is ", config.Cfg["timeout.read"])
+	if readTimeOut, err = strconv.ParseInt(s.GetConfig()["timeout.read"], 10, 64); err != nil {
+		log.Debugln("The value of readtimeout received is ", s.GetConfig()["timeout.read"])
 		log.Fatalln("Error parsing the read timeout. Exiting...")
 		os.Exit(1)
 	}
 
-	if writeTimeOut, err = strconv.ParseInt(config.Cfg["timeout.write"], 10, 64); err != nil {
-		log.Debugln("The value of writetimeout received is ", config.Cfg["timeout.write"])
+	if writeTimeOut, err = strconv.ParseInt(s.GetConfig()["timeout.write"], 10, 64); err != nil {
+		log.Debugln("The value of writetimeout received is ", s.GetConfig()["timeout.write"])
 		log.Fatalln("Error parsing the write timeout. Exiting...")
 		os.Exit(1)
 	}
