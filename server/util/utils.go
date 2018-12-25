@@ -4,7 +4,8 @@ import (
 	"os"
 	"path/filepath"
 )
-func PrintFile(path string, info os.FileInfo, err error) ([]string , error) {
+
+func PrintFile(path string, info os.FileInfo, err error) ([]string, error) {
 	var directories []string
 
 	if err != nil {
