@@ -32,8 +32,9 @@ apps:
   directory: {{.ParentAppDirectory}}
 `
 
-const ROUTES_CFG_TEMPLATE = `
-GET             /demo           DemoController.Demo
+const ROUTES_CFG_TEMPLATE = `GET             /demo           DemoController.Demo
+GET             /demoxml           DemoController.DemoXML
+GET             /demojson           DemoController.DemoJson
 `
 const MAIN_PACKAGE = `package main
 import (
@@ -126,13 +127,6 @@ func (d *DemoController) DemoJson() (error, *controller2.ModelAndView) {
 	return nil, modelAndView
 }
 `
-const MODEL_TEMPLATE = `package model
-
-type Person struct {
-	Name string
-	Age int
-}
-`
 const SERVICE_TEMPLATE = `package service
 import ( 
 	"github.com/{{.AppNameForTemplate}}/model"
@@ -153,6 +147,23 @@ func GetPerson() *model.Person {
 	return person
 }
 `
+
+const MODEL_TEMPLATE = `package model
+
+type Person struct {
+	Name string
+	Age int
+}
+`
+const VIEW_TEMPLATE = `<html>
+	<body>
+		hi there
+		<h1>{{.Name}}</h1>
+		<h1>{{.Age}}</h1>
+	</body>
+	</html>
+`
+
 const UTIL_LOGGER_TEMPLATE = `package util
 
 import (
@@ -183,9 +194,8 @@ func GetLogger() *logrus.Logger {
 }
 
 func initConfig() {
-	viper.Reset()
-	setupViper()
-	if err := viper.ReadInConfig(); err != nil {
+	v, err := setupViper()
+	if err != nil {
 		fmt.Printf("Can't read config, %v. Creating a template configfile in current directory.\n", err)
 		cmdConfigContent := []byte("logging:\n  level: info\n  destination: \"\"\n")
 		err := ioutil.WriteFile("./application.yaml", cmdConfigContent, 0644)
@@ -193,22 +203,24 @@ func initConfig() {
 			fmt.Println("Not able to create the config file in current directory. Exiting...", err)
 			os.Exit(1)
 		}
-		setupViper()
-		viper.ReadInConfig()
+		v.ReadInConfig()
 	}
-	loggingLevel := viper.Get("logging.level")
-	loggingDestination := viper.Get("logging.destination")
+	loggingLevel := v.Get("logging.level")
+	loggingDestination := v.Get("logging.destination")
 	fmt.Printf("Logging Level is :: %v.\n", loggingLevel)
 	fmt.Printf("Logging destintation is :: %v.\n", loggingDestination)
 	setupLogging(loggingDestination.(string), loggingLevel.(string))
 }
 
-func setupViper() {
-	viper.SetConfigName("application") // name of config file (without extension)
-	viper.SetConfigType("yaml")
-	viper.AddConfigPath("/etc/{{.AppNameForTemplate}}/")  // path to look for the config file in
-	viper.AddConfigPath(".")            // optionally look for config in the working directory
-	viper.AutomaticEnv()                // read in environment variables that match
+func setupViper() (*viper.Viper, error){
+	v := viper.New()
+	v.SetConfigName("application") // name of config file (without extension)
+	v.SetConfigType("yaml")
+	v.AddConfigPath("/etc/{{.AppNameForTemplate}}/")  // path to look for the config file in
+	v.AddConfigPath(".")            // optionally look for config in the working directory
+	v.AutomaticEnv()                // read in environment variables that match
+	err := v.ReadInConfig()
+	return v, err
 }
 
 func setupLogging(loggingDestFromConfig string, loggingLevel string) {
@@ -272,6 +284,7 @@ func CreateTemplates(dirname, appName, cfgFileLocation string) {
 	writeToFile(filepath.Join(dirname, "src", "github.com", appName, "controller"), "controller.go", appName, cfgFileLocation, CONTROLLER_TEMPLATE)
 	writeToFile(filepath.Join(dirname, "src", "github.com", appName, "service"), "service.go", appName, cfgFileLocation, SERVICE_TEMPLATE)
 	writeToFile(filepath.Join(dirname, "src", "github.com", appName, "model"), "model.go", appName, cfgFileLocation, MODEL_TEMPLATE)
+	writeToFile(filepath.Join(dirname, "src", "github.com", appName, "view"), "view.html", appName, cfgFileLocation, VIEW_TEMPLATE)
 	writeToFile(filepath.Join(dirname, "src", "github.com", appName, "util"), "logger.go", appName, cfgFileLocation, UTIL_LOGGER_TEMPLATE)
 	writeToFile(filepath.Join(dirname, "src", "github.com", appName, "config"), "server.yml", appName, cfgFileLocation, CONFIG_FILE_TEMPLATE)
 	writeToFile(filepath.Join(dirname, "src", "github.com", appName, "config"), "routes.cfg", appName, cfgFileLocation, ROUTES_CFG_TEMPLATE)
@@ -279,6 +292,7 @@ func CreateTemplates(dirname, appName, cfgFileLocation string) {
 
 	createBinAndPackageDirectory(filepath.Join(dirname, "bin"))
 	createBinAndPackageDirectory(filepath.Join(dirname, "pkg"))
+	createBinAndPackageDirectory(filepath.Join("var", "log", appName))
 }
 
 // func writeToFileReflect(fileName, content string) {

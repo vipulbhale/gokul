@@ -28,8 +28,8 @@ func GetLogger() *logrus.Logger {
 }
 
 func initConfig() {
-	setupViper()
-	if err := viper.ReadInConfig(); err != nil {
+	v, err := setupViper()
+	if err != nil {
 		fmt.Printf("Can't read config, %v. Creating a template configfile in current directory.\n", err)
 		cmdConfigContent := []byte("logging:\n  level: info\n  destination: stdout\n")
 		err := ioutil.WriteFile("./gokul.yaml", cmdConfigContent, 0644)
@@ -37,23 +37,25 @@ func initConfig() {
 			fmt.Println("Not able to create the config file in current directory. Exiting...", err)
 			os.Exit(1)
 		}
-		setupViper()
-		viper.ReadInConfig()
+		v.ReadInConfig()
 	}
-	loggingLevel := viper.Get("logging.level")
-	loggingDestination := viper.Get("logging.destination")
+	loggingLevel := v.Get("logging.level")
+	loggingDestination := v.Get("logging.destination")
 	fmt.Printf("Logging Level is %v \n", loggingLevel)
 	fmt.Printf("Logging destintation is %v \n", loggingDestination)
 	setupLogging(loggingDestination.(string), loggingLevel.(string))
 }
 
-func setupViper() {
-	viper.SetConfigName("gokul") // name of config file (without extension)
-	viper.SetConfigType("yaml")
-	viper.AddConfigPath("/etc/gokul/")  // path to look for the config file in
-	viper.AddConfigPath("$HOME/.gokul") // call multiple times to add many search paths
-	viper.AddConfigPath(".")            // optionally look for config in the working directory
-	viper.AutomaticEnv()                // read in environment variables that match
+func setupViper() (*viper.Viper, error) {
+	v := viper.New()
+	v.SetConfigName("gokul") // name of config file (without extension)
+	v.SetConfigType("yaml")
+	v.AddConfigPath("/etc/gokul/")  // path to look for the config file in
+	v.AddConfigPath("$HOME/.gokul") // call multiple times to add many search paths
+	v.AddConfigPath(".")            // optionally look for config in the working directory
+	v.AutomaticEnv()                // read in environment variables that match
+	err := v.ReadInConfig()
+	return v, err
 }
 
 func setupLogging(loggingDestFromConfig string, loggingLevel string) {
