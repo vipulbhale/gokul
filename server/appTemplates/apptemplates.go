@@ -70,6 +70,7 @@ const CONTROLLER_TEMPLATE = `package controller
 import (
 	controller2 "github.com/vipulbhale/gokul/server/controller"
 	"github.com/{{.AppNameForTemplate}}/util"
+	"github.com/{{.AppNameForTemplate}}/service"
 	"github.com/sirupsen/logrus"
 )
 var Log         *logrus.Logger
@@ -135,6 +136,7 @@ type Person struct {
 const SERVICE_TEMPLATE = `package service
 import ( 
 	"github.com/{{.AppNameForTemplate}}/model"
+	"github.com/{{.AppNameForTemplate}}/util"
 	"github.com/sirupsen/logrus"
 )
 
