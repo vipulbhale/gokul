@@ -4,21 +4,27 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/sirupsen/logrus"
+
+	"github.com/vipulbhale/gokul/server/util"
+
 	"github.com/spf13/cobra"
 )
 
 var (
 	userLicense string
 	VERSION     string
+	Log         *logrus.Logger
 )
-
-func init() {
-}
 
 var RootCmd = &cobra.Command{
 	Use:   "gokul",
 	Short: "gokul is used to generate stubs for web application , deploy the application , run the application.",
 	Long:  `A web application stub generator, deployer and runner`,
+}
+
+func init() {
+	Log = util.GetLogger()
 }
 
 // Execute adds all child commands to the root command

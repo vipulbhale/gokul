@@ -12,12 +12,14 @@ import (
 	"reflect"
 	"strings"
 
-	log "github.com/sirupsen/logrus"
+	"github.com/sirupsen/logrus"
+	"github.com/vipulbhale/gokul/server/util"
 )
 
 var (
-	cntrlSpec      = new(controllerSpec)
-	packageNameMap = make(map[string]string)
+	cntrlSpec                     = new(controllerSpec)
+	packageNameMap                = make(map[string]string)
+	log            *logrus.Logger = util.GetLogger()
 )
 
 const MAIN = `// GENERATED CODE - DO NOT EDIT
@@ -58,10 +60,10 @@ type controllerSpec struct {
 }
 
 func init() {
-	// Output to stdout instead of the default stderr, could also be a file.
-	log.SetOutput(os.Stdout)
-	// Only log the debug severity or above.
-	log.SetLevel(log.DebugLevel)
+	// // Output to stdout instead of the default stderr, could also be a file.
+	// log.SetOutput(os.Stdout)
+	// // Only log the debug severity or above.
+	// log.SetLevel(log.DebugLevel)
 }
 
 func ScanAppsDirectory(configuration map[string]string, appName string) {

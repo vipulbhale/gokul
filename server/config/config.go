@@ -2,23 +2,25 @@ package config
 
 import (
 	"fmt"
-	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
 
-	log "github.com/sirupsen/logrus"
+	"github.com/sirupsen/logrus"
+	"github.com/vipulbhale/gokul/server/util"
+
 	"github.com/spf13/viper"
 )
 
 var (
 	Cfg map[string]string
+	log *logrus.Logger = util.GetLogger()
 )
 
 func init() {
-	log.SetOutput(os.Stdout)
-	// Only log the debug severity or above.
-	log.SetLevel(log.DebugLevel)
+	// log.SetOutput(os.Stdout)
+	// // Only log the debug severity or above.
+	// log.SetLevel(log.DebugLevel)
 }
 
 // LoadConfigFile ... Load the config file for the server

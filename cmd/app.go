@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -20,7 +19,6 @@ func init() {
 	// App name is also equal to context root.
 	// Get the config location with server.yml location
 
-	//RootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.gokul.yaml)")
 	CmdApp.PersistentFlags().StringVarP(&AppDirName, "dir", "d", "", "Directory under which app needs to be run.")
 	CmdApp.PersistentFlags().StringVarP(&CfgFileLocation, "config", "c", "", "Config file location(default is $HOME/.gokul.yaml)")
 	CmdApp.PersistentFlags().StringVarP(&AppName, "name", "n", "", "App name. Will search for the same name in apps directory.")
@@ -37,5 +35,5 @@ var CmdApp = &cobra.Command{
 }
 
 func application(cmd *cobra.Command, args []string) {
-	log.Debugln("Inside the main application command")
+	Log.Debugln("Inside the main application command")
 }

@@ -1,8 +1,11 @@
 package controller
 
 import (
-	log "github.com/sirupsen/logrus"
+	"github.com/sirupsen/logrus"
+	"github.com/vipulbhale/gokul/server/util"
 )
+
+var log *logrus.Logger = util.GetLogger()
 
 type Controller interface {
 	Render()
