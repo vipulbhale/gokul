@@ -42,8 +42,8 @@ func initConfig() {
 	}
 	loggingLevel := viper.Get("logging.level")
 	loggingDestination := viper.Get("logging.destination")
-	fmt.Println("Logging Level is %v ", loggingLevel)
-	fmt.Println("Logging destintation is %v ", loggingDestination)
+	fmt.Printf("Logging Level is %v \n", loggingLevel)
+	fmt.Printf("Logging destintation is %v \n", loggingDestination)
 	setupLogging(loggingDestination.(string), loggingLevel.(string))
 }
 
@@ -69,16 +69,16 @@ func setupLogging(loggingDestFromConfig string, loggingLevel string) {
 			logFileName = strings.Split(loggingDestFromConfig, "file://")[0]
 			file, err := os.OpenFile(logFileName, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0755)
 			if err != nil {
-				fmt.Println("Error while creating the error file %v", err)
-				fmt.Println("Using the default location /var/log/gokul/cmd.log")
+				fmt.Printf("Error while creating the error file %v \n", err)
+				fmt.Printf("Using the default location /var/log/gokul/cmd.log. \n")
 				file, err = os.OpenFile("/var/log/gokul/cmd.log", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0755)
 			}
 			loggingDestination = file
 		} else {
 			file, err := os.OpenFile("/var/log/gokul/cmd.log", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0755)
 			if err != nil {
-				fmt.Println("Error while creating the error file %v", err)
-				fmt.Println("Using the stdout as the log destination.")
+				fmt.Printf("Error while creating the error file :: %v .\n", err)
+				fmt.Printf("Using the stdout as the log destination.\n")
 				loggingDestination = os.Stdout
 			}
 			loggingDestination = file

@@ -186,8 +186,8 @@ func initConfig() {
 	setupViper()
 	if err := viper.ReadInConfig(); err != nil {
 		fmt.Printf("Can't read config, %v. Creating a template configfile in current directory.\n", err)
-		cmdConfigContent := []byte("logging:\n  level: info\n  destination: stdout\n")
-		err := ioutil.WriteFile("./gokul.yaml", cmdConfigContent, 0644)
+		cmdConfigContent := []byte("logging:\n  level: info\n  destination: ""\n")
+		err := ioutil.WriteFile("./application.yaml", cmdConfigContent, 0644)
 		if err != nil {
 			fmt.Println("Not able to create the config file in current directory. Exiting...", err)
 			os.Exit(1)
@@ -197,16 +197,15 @@ func initConfig() {
 	}
 	loggingLevel := viper.Get("logging.level")
 	loggingDestination := viper.Get("logging.destination")
-	fmt.Println("Logging Level is %v ", loggingLevel)
-	fmt.Println("Logging destintation is %v ", loggingDestination)
+	fmt.Printf("Logging Level is :: %v.\n", loggingLevel)
+	fmt.Printf("Logging destintation is :: %v.\n", loggingDestination)
 	setupLogging(loggingDestination.(string), loggingLevel.(string))
 }
 
 func setupViper() {
-	viper.SetConfigName("gokul") // name of config file (without extension)
+	viper.SetConfigName("application") // name of config file (without extension)
 	viper.SetConfigType("yaml")
-	viper.AddConfigPath("/etc/gokul/")  // path to look for the config file in
-	viper.AddConfigPath("$HOME/.gokul") // call multiple times to add many search paths
+	viper.AddConfigPath("/etc/{{.AppNameForTemplate}}/")  // path to look for the config file in
 	viper.AddConfigPath(".")            // optionally look for config in the working directory
 	viper.AutomaticEnv()                // read in environment variables that match
 }
@@ -224,16 +223,16 @@ func setupLogging(loggingDestFromConfig string, loggingLevel string) {
 			logFileName = strings.Split(loggingDestFromConfig, "file://")[0]
 			file, err := os.OpenFile(logFileName, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0755)
 			if err != nil {
-				fmt.Println("Error while creating the error file %v", err)
-				fmt.Println("Using the default location /var/log/gokul/cmd.log")
-				file, err = os.OpenFile("/var/log/gokul/cmd.log", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0755)
+				fmt.Printf("Error while creating the error file :: %v.\n", err)
+				fmt.Printf("Using the default location /var/log/{{.AppNameForTemplate}}/app.log.\n")
+				file, err = os.OpenFile("/var/log/{{.AppNameForTemplate}}/app.log", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0755)
 			}
 			loggingDestination = file
 		} else {
-			file, err := os.OpenFile("/var/log/gokul/cmd.log", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0755)
+			file, err := os.OpenFile("/var/log/{{.AppNameForTemplate}}/app.log", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0755)
 			if err != nil {
-				fmt.Println("Error while creating the error file %v", err)
-				fmt.Println("Using the stdout as the log destination.")
+				fmt.Printf("Error while creating the error file :: %v.\n", err)
+				fmt.Printf("Using the stdout as the log destination.\n")
 				loggingDestination = os.Stdout
 			}
 			loggingDestination = file
