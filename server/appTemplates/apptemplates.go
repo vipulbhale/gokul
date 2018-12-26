@@ -2,6 +2,7 @@ package appTemplates
 
 import (
 	"bytes"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"text/template"
@@ -280,38 +281,38 @@ func CreateTemplates(dirname, appName, cfgFileLocation string) {
 	// writeToFile(filepath.Join(dirname, "src", "github.com", appName, "config"), "config.go", appName, cfgFileLocation, SERVER_CONFIG_TEMPLATE)
 	// writeToFileReflect(filepath.Join(dirname, "src", "github.com", appName, "reflect", "reflect.go"), GOKUL_REFLECT_TEMPLATE)
 
-	writeToFile(filepath.Join(dirname, "src", "github.com", appName), "main.go", appName, cfgFileLocation, MAIN_PACKAGE)
-	writeToFile(filepath.Join(dirname, "src", "github.com", appName, "controller"), "controller.go", appName, cfgFileLocation, CONTROLLER_TEMPLATE)
-	writeToFile(filepath.Join(dirname, "src", "github.com", appName, "service"), "service.go", appName, cfgFileLocation, SERVICE_TEMPLATE)
-	writeToFile(filepath.Join(dirname, "src", "github.com", appName, "model"), "model.go", appName, cfgFileLocation, MODEL_TEMPLATE)
-	writeToFile(filepath.Join(dirname, "src", "github.com", appName, "view"), "view.html", appName, cfgFileLocation, VIEW_TEMPLATE)
-	writeToFile(filepath.Join(dirname, "src", "github.com", appName, "util"), "logger.go", appName, cfgFileLocation, UTIL_LOGGER_TEMPLATE)
-	writeToFile(filepath.Join(dirname, "src", "github.com", appName, "config"), "server.yml", appName, cfgFileLocation, CONFIG_FILE_TEMPLATE)
-	writeToFile(filepath.Join(dirname, "src", "github.com", appName, "config"), "routes.cfg", appName, cfgFileLocation, ROUTES_CFG_TEMPLATE)
-	writeToFile(filepath.Join(dirname, "src", "github.com", appName), "variables.env", appName, cfgFileLocation, "GOPATH="+os.Getenv("GOPATH"))
+	writeToFileUsingTemplate(filepath.Join(dirname, "src", "github.com", appName), "main.go", appName, cfgFileLocation, MAIN_PACKAGE)
+	writeToFileUsingTemplate(filepath.Join(dirname, "src", "github.com", appName, "controller"), "controller.go", appName, cfgFileLocation, CONTROLLER_TEMPLATE)
+	writeToFileUsingTemplate(filepath.Join(dirname, "src", "github.com", appName, "service"), "service.go", appName, cfgFileLocation, SERVICE_TEMPLATE)
+	writeToFileUsingTemplate(filepath.Join(dirname, "src", "github.com", appName, "model"), "model.go", appName, cfgFileLocation, MODEL_TEMPLATE)
+	writeToFileContent(filepath.Join(dirname, "src", "github.com", appName, "view", "view.html"), VIEW_TEMPLATE)
+	writeToFileUsingTemplate(filepath.Join(dirname, "src", "github.com", appName, "util"), "logger.go", appName, cfgFileLocation, UTIL_LOGGER_TEMPLATE)
+	writeToFileUsingTemplate(filepath.Join(dirname, "src", "github.com", appName, "config"), "server.yml", appName, cfgFileLocation, CONFIG_FILE_TEMPLATE)
+	writeToFileUsingTemplate(filepath.Join(dirname, "src", "github.com", appName, "config"), "routes.cfg", appName, cfgFileLocation, ROUTES_CFG_TEMPLATE)
+	writeToFileUsingTemplate(filepath.Join(dirname, "src", "github.com", appName), "variables.env", appName, cfgFileLocation, "GOPATH="+os.Getenv("GOPATH"))
 
 	createBinAndPackageDirectory(filepath.Join(dirname, "bin"))
 	createBinAndPackageDirectory(filepath.Join(dirname, "pkg"))
 	createBinAndPackageDirectory(filepath.Join("var", "log", appName))
 }
 
-// func writeToFileReflect(fileName, content string) {
-// 	log.Debugln("For the reflect directory is ", filepath.Dir(fileName))
-// 	if _, err := os.Stat(filepath.Dir(fileName)); os.IsNotExist(err) {
-// 		err = os.MkdirAll(filepath.Dir(fileName), 0755)
-// 		if err != nil {
-// 			panic(err)
-// 		}
-// 	}
+func writeToFileContent(fileName, content string) {
+	log.Debugln("The directory to which content needs to be copied is :: ", filepath.Dir(fileName))
+	if _, err := os.Stat(filepath.Dir(fileName)); os.IsNotExist(err) {
+		err = os.MkdirAll(filepath.Dir(fileName), 0755)
+		if err != nil {
+			panic(err)
+		}
+	}
 
-// 	d1 := []byte(content)
-// 	err := ioutil.WriteFile(fileName, d1, 0644)
-// 	if err != nil {
-// 		log.Fatalln("Error while copying the reflect.go to apps directory")
-// 	}
-// }
+	d1 := []byte(content)
+	err := ioutil.WriteFile(fileName, d1, 0755)
+	if err != nil {
+		log.Fatalln("Error while copying the content to file ", fileName)
+	}
+}
 
-func writeToFile(dirName, fileName, appName, cfgFileLocation, content string) {
+func writeToFileUsingTemplate(dirName, fileName, appName, cfgFileLocation, content string) {
 	log.Debugln("Entering the writeToFile method with parameters", dirName, fileName, appName, cfgFileLocation)
 	appTemplate := ApplicationForTemplate{AppNameForTemplate: appName, ParentAppDirectory: filepath.Dir(dirName), CfgFileLocation: cfgFileLocation}
 
