@@ -7,7 +7,6 @@ import (
 	"os/exec"
 	"path/filepath"
 
-	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/vipulbhale/gokul/server/config"
 	goreflect "github.com/vipulbhale/gokul/server/reflect"
@@ -30,32 +29,32 @@ var cmdDeploy = &cobra.Command{
 func executeOSCommand(commandString string, parameters ...string) {
 	goPath, err := exec.LookPath(commandString)
 	if err != nil {
-		log.Fatalln("Error while getting the path of the go binary", err)
+		Log.Fatalln("Error while getting the path of the go binary", err)
 	}
-	log.Debug("The gopath is ", goPath)
+	Log.Debug("The gopath is ", goPath)
 
 	command := exec.Command(goPath, parameters...)
 	command.Env = []string{"GOPATH=" + filepath.Join(AppDirName), "PATH=" + os.Getenv("PATH")}
 	stderr, err := command.StderrPipe()
 	if err != nil {
-		log.Fatal(err)
+		Log.Fatal(err)
 	}
 
 	if err := command.Start(); err != nil {
-		log.Fatal(err)
+		Log.Fatal(err)
 	}
 
 	slurp, _ := ioutil.ReadAll(stderr)
 	fmt.Printf("%s\n", slurp)
 
 	if err := command.Wait(); err != nil {
-		log.Fatal(err)
+		Log.Fatal(err)
 	}
 }
 
 func deployApp(cmd *cobra.Command, args []string) {
-	log.Debugln("Deploying the apps")
-	log.Debugln("Scanning all existing apps for controllers")
+	Log.Debugln("Deploying the apps")
+	Log.Debugln("Scanning all existing apps for controllers")
 	if len(CfgFileLocation) > 0 {
 		config.LoadConfigFile(CfgFileLocation)
 	} else {

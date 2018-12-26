@@ -8,25 +8,26 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/vipulbhale/gokul/server/config"
+	"github.com/sirupsen/logrus"
+	"github.com/vipulbhale/gokul/server/util"
 
-	log "github.com/sirupsen/logrus"
+	"github.com/vipulbhale/gokul/server/config"
 )
 
 var (
-	routeRepo map[string]*route
-	regex     *regexp.Regexp
-	//	patternRoute 		= 	"^(\\/)([/a-zA-Z0-9])+\\s+\\w+.\\w+"
-	patternRoute = "([A-Z])+\\s+([/a-zA-Z0-9])+\\s+\\w+.\\w+"
+	routeRepo    map[string]*route
+	regex        *regexp.Regexp
+	patternRoute                = "([A-Z])+\\s+([/a-zA-Z0-9])+\\s+\\w+.\\w+"
+	log          *logrus.Logger = util.GetLogger()
 )
 
 func init() {
 	regex, _ = regexp.Compile(patternRoute)
 	// Output to stdout instead of the default stderr, could also be a file.
-	log.SetOutput(os.Stdout)
+	// log.SetOutput(os.Stdout)
 
-	// Only log the debug severity or above.
-	log.SetLevel(log.DebugLevel)
+	// // Only log the debug severity or above.
+	// log.SetLevel(log.DebugLevel)
 }
 
 type route struct {
