@@ -183,10 +183,11 @@ func GetLogger() *logrus.Logger {
 }
 
 func initConfig() {
+	viper.Reset()
 	setupViper()
 	if err := viper.ReadInConfig(); err != nil {
 		fmt.Printf("Can't read config, %v. Creating a template configfile in current directory.\n", err)
-		cmdConfigContent := []byte("logging:\n  level: info\n  destination: ""\n")
+		cmdConfigContent := []byte("logging:\n  level: info\n  destination: \"\"\n")
 		err := ioutil.WriteFile("./application.yaml", cmdConfigContent, 0644)
 		if err != nil {
 			fmt.Println("Not able to create the config file in current directory. Exiting...", err)
