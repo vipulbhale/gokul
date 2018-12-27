@@ -58,9 +58,16 @@ func handle(w http.ResponseWriter, r *http.Request) {
 	log.Debugln("Inside the handle method for the request")
 	log.Debugln("Accept header in the request is :: ", r.Header["Accept"][0])
 
-	var requestAcceptHeader = r.Header["Accept"][0]
 	var maxRequestSize int64
 	var err error
+	var requestAcceptHeader string
+
+	if r.Header["Accept"] == nil || len(r.Header["Accept"][0]) == 0 || r.Header["Accept"][0] == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("400 - Accept Header is not passed"))
+	} else {
+		requestAcceptHeader = r.Header["Accept"][0]
+	}
 
 	if maxRequestSize, err = strconv.ParseInt(tempServer.GetConfig()["http.maxrequestsize"], 10, 64); err != nil {
 		log.Fatalln("Error parsing the maxrequestsize. Exiting...")
@@ -87,62 +94,64 @@ func handle(w http.ResponseWriter, r *http.Request) {
 			if response != nil && len(response) != 2 {
 				w.WriteHeader(http.StatusInternalServerError)
 				w.Write([]byte("500 - Controller Method is returning more than 2 parameters."))
-			}
-
-			if response[1].Elem().Interface() == nil {
+			} else if response[1].Elem().Interface() == nil {
 				w.WriteHeader(http.StatusInternalServerError)
 				w.Write([]byte("500 - Nil ModelAndView Struct"))
-			}
-
-			log.Debugln("First Arg Type name is :: ", response[0].Type().Name())
-			log.Debugln("Second Arg Type name is ::", response[1].Elem().Type().Name())
-
-			if response[0].Type().Name() != "error" {
+			} else if response[0].Type().Name() != "error" {
 				w.WriteHeader(http.StatusInternalServerError)
 				w.Write([]byte("500 - Controller Method should return first parameter as error interface."))
-			}
-
-			if response[1].Elem().Type().Name() != "ModelAndView" {
+			} else if response[1].Elem().Type().Name() != "ModelAndView" {
 				w.WriteHeader(http.StatusInternalServerError)
 				w.Write([]byte("500 - Controller Method should return second parameter as ModelAndView struct."))
-			}
-			modelAndView := response[1].Elem().Interface().(controller.ModelAndView)
-			log.Debugln("Value of ModelAndView struct received is :: ", modelAndView)
-			model := modelAndView.GetModel()
-			view := modelAndView.GetView()
-			responseType := modelAndView.GetResponseType()
+			} else if response[0].Interface().(error) != nil {
+				err := response[0].Interface().(error)
+				w.WriteHeader(http.StatusInternalServerError)
+				w.Write([]byte(err.Error()))
+			} else {
+				modelAndView := response[1].Elem().Interface().(controller.ModelAndView)
+				log.Debugln("Value of ModelAndView struct received is :: ", modelAndView)
+				model := modelAndView.GetModel()
+				view := modelAndView.GetView()
+				responseType := modelAndView.GetResponseType()
 
-			log.Debugln("Model to be passed to template is :: ", model)
-			log.Debugln("View to be passed to template is :: ", view)
-			log.Debugln("ResponseType of the response is :: ", responseType)
+				log.Debugln("Model to be passed to template is :: ", model)
+				log.Debugln("View to be passed to template is :: ", view)
+				log.Debugln("ResponseType of the response is :: ", responseType)
 
-			if r.Header["Accept"] != nil && len(r.Header["Accept"]) != 0 && (strings.Contains(requestAcceptHeader, "*/*") || strings.Contains(requestAcceptHeader, "text/html") && strings.Contains(requestAcceptHeader, responseType)) && len(view) != 0 {
-				w.Header().Set("Content-Type", responseType)
-				templateFileName := filepath.Join(tempServer.GetConfig()["apps.directory"], "view", view+".html")
-				tmpl := template.Must(template.ParseFiles(templateFileName))
-				tmpl.Execute(w, model)
-				defer recoverFromTemplateExecute()
-			} else if strings.Contains(requestAcceptHeader, "application/json") && strings.Contains(requestAcceptHeader, responseType) {
-				w.Header().Set("Content-Type", responseType)
-				jsonEncoder := json.NewEncoder(w)
-				jsonEncoder.SetEscapeHTML(true)
-				if err := jsonEncoder.Encode(model); err != nil {
-					log.Errorln("Error while marshalling json response for the request", filteredRoute.GetURL())
-					w.WriteHeader(http.StatusInternalServerError)
-					w.Write([]byte(err.Error()))
+				if (strings.Contains(requestAcceptHeader, "*/*") || strings.Contains(requestAcceptHeader, "text/html") && strings.Contains(requestAcceptHeader, responseType)) && len(view) != 0 {
+					w.Header().Set("Content-Type", responseType)
+					templateFileName := filepath.Join(tempServer.GetConfig()["apps.directory"], "view", view+".html")
+					tmpl := template.Must(template.ParseFiles(templateFileName))
+					tmpl.Execute(w, model)
+					defer recoverFromTemplateExecute()
+				} else if strings.Contains(requestAcceptHeader, "application/json") && strings.Contains(requestAcceptHeader, responseType) {
+					w.Header().Set("Content-Type", responseType)
+					jsonEncoder := json.NewEncoder(w)
+					jsonEncoder.SetEscapeHTML(true)
+					if err := jsonEncoder.Encode(model); err != nil {
+						log.Errorln("Error while marshalling json response for the request", filteredRoute.GetURL())
+						w.WriteHeader(http.StatusInternalServerError)
+						w.Write([]byte(err.Error()))
+					}
+				} else if strings.Contains(requestAcceptHeader, "application/xml") && strings.Contains(requestAcceptHeader, responseType) {
+					w.Header().Set("Content-Type", responseType)
+					xmlEncoder := xml.NewEncoder(w)
+					if err := xmlEncoder.Encode(model); err != nil {
+						log.Errorln("Error while marshalling xml response for the request", filteredRoute.GetURL())
+						w.WriteHeader(http.StatusInternalServerError)
+						w.Write([]byte(err.Error()))
+					}
+				} else {
+					log.Errorln("Didn't match with content type with Accept header for the given route.")
+					w.WriteHeader(http.StatusBadRequest)
+					w.Write([]byte("Content Type of response and Accept Header doesn't match"))
 				}
-			} else if strings.Contains(requestAcceptHeader, "application/xml") && strings.Contains(requestAcceptHeader, responseType) {
-				w.Header().Set("Content-Type", responseType)
-				xmlEncoder := xml.NewEncoder(w)
-				if err := xmlEncoder.Encode(model); err != nil {
-					log.Errorln("Error while marshalling xml response for the request", filteredRoute.GetURL())
-					w.WriteHeader(http.StatusInternalServerError)
-					w.Write([]byte(err.Error()))
-				}
 			}
-
+		} else {
+			log.Errorln("Didn't match the URL inside the application.")
+			w.WriteHeader(http.StatusNotFound)
+			w.Write([]byte("404 - Route not found"))
 		}
-
 	}
 }
 
