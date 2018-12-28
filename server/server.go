@@ -9,6 +9,8 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -18,6 +20,17 @@ import (
 	"github.com/vipulbhale/gokul/server/controller"
 	"github.com/vipulbhale/gokul/server/routes"
 )
+
+type acceptHeaderWithQuality struct {
+	mimeTypes string
+	quality   float64
+}
+
+type byQuality []acceptHeaderWithQuality
+
+func (a byQuality) Len() int           { return len(a) }
+func (a byQuality) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+func (a byQuality) Less(i, j int) bool { return a[i].quality > a[j].quality }
 
 var (
 	httpServer                       *http.Server
@@ -61,6 +74,7 @@ func handle(w http.ResponseWriter, r *http.Request) {
 	var maxRequestSize int64
 	var err error
 	var requestAcceptHeader string
+	acceptHeaderFound := false
 
 	if r.Header["Accept"] == nil || len(r.Header["Accept"][0]) == 0 || r.Header["Accept"][0] == "" {
 		w.WriteHeader(http.StatusBadRequest)
@@ -68,6 +82,7 @@ func handle(w http.ResponseWriter, r *http.Request) {
 	} else {
 		requestAcceptHeader = r.Header["Accept"][0]
 	}
+	var sortedAcceptHeaders byQuality = getSortedAcceptHeader(requestAcceptHeader)
 
 	if maxRequestSize, err = strconv.ParseInt(tempServer.GetConfig()["http.maxrequestsize"], 10, 64); err != nil {
 		log.Fatalln("Error parsing the maxrequestsize. Exiting...")
@@ -89,7 +104,8 @@ func handle(w http.ResponseWriter, r *http.Request) {
 			log.Debugln(reflect.ValueOf(filteredRoute.GetController()))
 			log.Debugln("Controller type object :: ", mapControllerNameToControllerObj[filteredRoute.GetController()])
 			log.Debugln("About to execute the controller method using the reflection...")
-			response := mapControllerNameToControllerObj[filteredRoute.GetController()].MethodByName(filteredRoute.GetMethod()).Call([]reflect.Value{})
+			//			response := mapControllerNameToControllerObj[filteredRoute.GetController()].MethodByName(filteredRoute.GetMethod()).Call([]reflect.Value{})
+			response := reflect.New(reflect.TypeOf(mapControllerNameToControllerObj[filteredRoute.GetController()])).MethodByName(filteredRoute.GetMethod()).Call([]reflect.Value{})
 
 			if response != nil && len(response) != 2 {
 				w.WriteHeader(http.StatusInternalServerError)
@@ -110,46 +126,55 @@ func handle(w http.ResponseWriter, r *http.Request) {
 			} else {
 				modelAndView := response[1].Elem().Interface().(controller.ModelAndView)
 				log.Debugln("Value of ModelAndView struct received is :: ", modelAndView)
+
 				model := modelAndView.GetModel()
 				view := modelAndView.GetView()
-				responseType := modelAndView.GetResponseType()
 
 				log.Debugln("Model to be passed to template is :: ", model)
 				log.Debugln("View to be passed to template is :: ", view)
-				log.Debugln("ResponseType of the response is :: ", responseType)
 
-				if (strings.Contains(requestAcceptHeader, "*/*") || strings.Contains(requestAcceptHeader, "text/html") && strings.Contains(requestAcceptHeader, responseType)) && len(view) != 0 {
-					w.Header().Set("Content-Type", responseType)
-					templateFileName := filepath.Join(tempServer.GetConfig()["apps.directory"], "view", view+".html")
-					tmpl := template.Must(template.ParseFiles(templateFileName))
-					tmpl.Execute(w, model)
-					defer recoverFromTemplateExecute()
-				} else if strings.Contains(requestAcceptHeader, "application/json") && strings.Contains(requestAcceptHeader, responseType) {
-					w.Header().Set("Content-Type", responseType)
-					jsonEncoder := json.NewEncoder(w)
-					jsonEncoder.SetEscapeHTML(true)
-					if err := jsonEncoder.Encode(model); err != nil {
-						log.Errorln("Error while marshalling json response for the request", filteredRoute.GetURL())
-						w.WriteHeader(http.StatusInternalServerError)
-						w.Write([]byte(err.Error()))
+				for _, acceptHeader := range sortedAcceptHeaders {
+					requestAcceptHeader = acceptHeader.mimeTypes
+					if (strings.Contains(requestAcceptHeader, "*/*") || strings.Contains(requestAcceptHeader, "text/html")) && view != "" {
+						w.Header().Set("Content-Type", "text/html")
+						templateFileName := filepath.Join(tempServer.GetConfig()["apps.directory"], "view", view+".html")
+						tmpl := template.Must(template.ParseFiles(templateFileName))
+						tmpl.Execute(w, model)
+						defer recoverFromTemplateExecute()
+						acceptHeaderFound = true
+						break
+					} else if strings.Contains(requestAcceptHeader, "application/json") && view == "" {
+						w.Header().Set("Content-Type", requestAcceptHeader)
+						jsonEncoder := json.NewEncoder(w)
+						jsonEncoder.SetEscapeHTML(true)
+						if err := jsonEncoder.Encode(model); err != nil {
+							log.Errorln("Error while marshalling json response for the request", filteredRoute.GetURL())
+							w.WriteHeader(http.StatusInternalServerError)
+							w.Write([]byte(err.Error()))
+						}
+						acceptHeaderFound = true
+						break
+					} else if strings.Contains(requestAcceptHeader, "application/xml") && view == "" {
+						w.Header().Set("Content-Type", requestAcceptHeader)
+						xmlEncoder := xml.NewEncoder(w)
+						if err := xmlEncoder.Encode(model); err != nil {
+							log.Errorln("Error while marshalling xml response for the request", filteredRoute.GetURL())
+							w.WriteHeader(http.StatusInternalServerError)
+							w.Write([]byte(err.Error()))
+						}
+						acceptHeaderFound = true
+						break
 					}
-				} else if strings.Contains(requestAcceptHeader, "application/xml") && strings.Contains(requestAcceptHeader, responseType) {
-					w.Header().Set("Content-Type", responseType)
-					xmlEncoder := xml.NewEncoder(w)
-					if err := xmlEncoder.Encode(model); err != nil {
-						log.Errorln("Error while marshalling xml response for the request", filteredRoute.GetURL())
-						w.WriteHeader(http.StatusInternalServerError)
-						w.Write([]byte(err.Error()))
-					}
-				} else {
+				}
+				if !acceptHeaderFound {
 					log.Errorln("Didn't match with content type with Accept header for the given route.")
-					w.WriteHeader(http.StatusBadRequest)
-					w.Write([]byte("Content Type of response and Accept Header doesn't match"))
+					w.WriteHeader(http.StatusNotAcceptable)
+					w.Write([]byte("Accept header may be not provided"))
 				}
 			}
 		} else {
 			log.Errorln("Didn't match the URL inside the application.")
-			w.WriteHeader(http.StatusNotFound)
+			w.WriteHeader(http.StatusNotAcceptable)
 			w.Write([]byte("404 - Route not found"))
 		}
 	}
@@ -197,6 +222,32 @@ func Run(s *server) {
 	}
 
 	log.Fatalln("Failed to serve :: ", httpServer.Serve(listener))
+}
+
+func getSortedAcceptHeader(acceptHeader string) []acceptHeaderWithQuality {
+	return sortAcceptHeaderByQuality(parseAcceptHeader(acceptHeader))
+}
+
+func parseAcceptHeader(acceptHeader string) []acceptHeaderWithQuality {
+	var regexPatternForAccept = "(([a-z+\\*]+\\/[a-z+\\*]+,?\\s?)+();q=)?[01]?\\.?[0-9]?(,\\s)?)+"
+	searchedStrings := regexp.MustCompile(regexPatternForAccept).FindAllString(acceptHeader, -1)
+	ahs := make([]acceptHeaderWithQuality, len(searchedStrings))
+
+	for i, header := range searchedStrings {
+		tempHeader := strings.Split(header, ";")
+		mimeTypes := tempHeader[0]
+		ahs[i].mimeTypes = mimeTypes
+		if quality, err := strconv.ParseFloat(tempHeader[1], 64); err == nil {
+			ahs[i].quality = quality
+		}
+	}
+	log.Debugln("Parsed Accept Header is :: ", ahs)
+	return ahs
+}
+
+func sortAcceptHeaderByQuality(parsedAcceptHeader []acceptHeaderWithQuality) []acceptHeaderWithQuality {
+	sort.Sort(byQuality(parsedAcceptHeader))
+	return parsedAcceptHeader
 }
 
 func recoverFromTemplateExecute() {
