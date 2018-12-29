@@ -64,28 +64,31 @@ func setupLogging(loggingDestFromConfig string, loggingLevel string) {
 	var logLevel logrus.Level
 	var err error
 
-	if len(loggingDestFromConfig) != 0 {
-		if loggingDestFromConfig == "stdout" {
+	// if len(loggingDestFromConfig) != 0 {
+	if loggingDestFromConfig == "stdout" {
+		loggingDestination = os.Stdout
+	} else if strings.HasPrefix(loggingDestFromConfig, "file://") {
+		logFileName = strings.Split(loggingDestFromConfig, "file://")[0]
+		file, err := os.OpenFile(logFileName, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0755)
+		if err != nil {
+			fmt.Printf("Error while creating the error file %v \n", err)
+			fmt.Printf("Using the default location /var/log/gokul/cmd.log. \n")
+			CreateDirectory("/var/log/gokul")
+			file, err = os.OpenFile("/var/log/gokul/cmd.log", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0755)
+		}
+		loggingDestination = file
+	} else {
+		CreateDirectory("/var/log/gokul")
+		file, err := os.OpenFile("/var/log/gokul/cmd.log", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0755)
+		if err != nil {
+			fmt.Printf("Error while creating the error file :: %v .\n", err)
+			fmt.Printf("Using the stdout as the log destination.\n")
 			loggingDestination = os.Stdout
-		} else if strings.HasPrefix(loggingDestFromConfig, "file://") {
-			logFileName = strings.Split(loggingDestFromConfig, "file://")[0]
-			file, err := os.OpenFile(logFileName, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0755)
-			if err != nil {
-				fmt.Printf("Error while creating the error file %v \n", err)
-				fmt.Printf("Using the default location /var/log/gokul/cmd.log. \n")
-				file, err = os.OpenFile("/var/log/gokul/cmd.log", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0755)
-			}
-			loggingDestination = file
 		} else {
-			file, err := os.OpenFile("/var/log/gokul/cmd.log", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0755)
-			if err != nil {
-				fmt.Printf("Error while creating the error file :: %v .\n", err)
-				fmt.Printf("Using the stdout as the log destination.\n")
-				loggingDestination = os.Stdout
-			}
 			loggingDestination = file
 		}
 	}
+	// }
 
 	if len(loggingLevel) != 0 {
 		// Only log the debug severity or above.

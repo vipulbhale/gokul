@@ -17,3 +17,12 @@ func PrintFile(path string, info os.FileInfo, err error) ([]string, error) {
 	}
 	return directories, nil
 }
+
+func CreateDirectory(dirName string) {
+	if _, err := os.Stat(dirName); os.IsNotExist(err) {
+		err = os.MkdirAll(dirName, 0755)
+		if err != nil {
+			Logger.Errorln("Error while creating the directory", dirName)
+		}
+	}
+}

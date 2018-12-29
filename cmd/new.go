@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	appTemplates "github.com/vipulbhale/gokul/server/apptemplates"
+	appTemplates "github.com/vipulbhale/gokul/server/appTemplates"
 )
 
 var cmdNew = &cobra.Command{
