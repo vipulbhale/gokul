@@ -99,15 +99,14 @@ func handle(w http.ResponseWriter, r *http.Request) {
 
 	if r.URL.Path != "/favicon.ico" {
 		if filteredRoute := routes.GetRoute(r.URL.Path, r.Method); filteredRoute != nil {
-			log.Debugln("Filtered route is ", *filteredRoute)
-			log.Debugln(filteredRoute.GetController())
-			log.Debugln(filteredRoute.GetMethod())
-			log.Debugln(filteredRoute.GetURL())
-			log.Debugln(reflect.ValueOf(filteredRoute.GetController()))
+			log.Debugln("Filtered Route is ", *filteredRoute)
+			log.Debugln("Filtered Route Controller is :: ", filteredRoute.GetController())
+			log.Debugln("Filter Route Controller's method is :: ", filteredRoute.GetMethod())
+			log.Debugln("Filtered Route URL is :: ", filteredRoute.GetURL())
 			log.Debugln("Controller type object :: ", mapControllerNameToControllerObj[filteredRoute.GetController()])
 			log.Debugln("About to execute the controller method using the reflection...")
-			//			response := mapControllerNameToControllerObj[filteredRoute.GetController()].MethodByName(filteredRoute.GetMethod()).Call([]reflect.Value{})
-			response := reflect.New(reflect.TypeOf(mapControllerNameToControllerObj[filteredRoute.GetController()])).MethodByName(filteredRoute.GetMethod()).Call([]reflect.Value{})
+			response := mapControllerNameToControllerObj[filteredRoute.GetController()].MethodByName(filteredRoute.GetMethod()).Call([]reflect.Value{})
+			// response := reflect.New(reflect.TypeOf(mapControllerNameToControllerObj[filteredRoute.GetController()])).Elem().MethodByName(filteredRoute.GetMethod()).Call([]reflect.Value{})
 
 			if response != nil && len(response) != 2 {
 				w.WriteHeader(http.StatusInternalServerError)
@@ -121,7 +120,7 @@ func handle(w http.ResponseWriter, r *http.Request) {
 			} else if response[1].Elem().Type().Name() != "ModelAndView" {
 				w.WriteHeader(http.StatusInternalServerError)
 				w.Write([]byte("500 - Controller Method should return second parameter as ModelAndView struct."))
-			} else if response[0].Interface().(error) != nil {
+			} else if response[0].Interface() != nil && response[0].Interface().(error) != nil {
 				err := response[0].Interface().(error)
 				w.WriteHeader(http.StatusInternalServerError)
 				w.Write([]byte(err.Error()))
@@ -222,26 +221,37 @@ func Run(s *server) {
 	if err != nil {
 		log.Fatalln("Failed to listen :: ", err)
 	}
-
 	log.Fatalln("Failed to serve :: ", httpServer.Serve(listener))
 }
 
 func getSortedAcceptHeader(acceptHeader string) []acceptHeaderWithQuality {
+	log.Debugln("The raw accept header received from client in string format is :: ", acceptHeader)
 	return sortAcceptHeaderByQuality(parseAcceptHeader(acceptHeader))
 }
 
 func parseAcceptHeader(acceptHeader string) []acceptHeaderWithQuality {
-	var regexPatternForAccept = "(([a-z+\\*]+\\/[a-z+\\*]+,?\\s?)+();q=)?[01]?\\.?[0-9]?(,\\s)?)+"
+	var regexPatternForAccept = "(([a-z+\\*]+\\/[a-z+\\*]+,?\\s?)+(;q=)?[01]?\\.?[0-9]?(,\\s)?)+"
 	searchedStrings := regexp.MustCompile(regexPatternForAccept).FindAllString(acceptHeader, -1)
+	log.Debugln("The accept header after matching to regex :: ", searchedStrings)
 	ahs := make([]acceptHeaderWithQuality, len(searchedStrings))
 
 	for i, header := range searchedStrings {
 		tempHeader := strings.Split(header, ";")
+		log.Infoln("Header after splitting with token as ;", tempHeader)
 		mimeTypes := tempHeader[0]
 		ahs[i].mimeTypes = mimeTypes
-		if quality, err := strconv.ParseFloat(tempHeader[1], 64); err == nil {
-			ahs[i].quality = quality
+		if len(tempHeader) > 1 {
+			if quality, err := strconv.ParseFloat(tempHeader[1], 64); err == nil {
+				ahs[i].quality = quality
+			} else if err != nil {
+				log.Errorln("Error while parsing the quality :: ", err)
+				log.Infoln("Defaulting the quality to accept header to 1")
+				ahs[i].quality = 1
+			}
+		} else {
+			ahs[i].quality = 1
 		}
+		log.Debugln("One of the accept header is :: ", ahs[i])
 	}
 	log.Debugln("Parsed Accept Header is :: ", ahs)
 	return ahs
@@ -249,6 +259,7 @@ func parseAcceptHeader(acceptHeader string) []acceptHeaderWithQuality {
 
 func sortAcceptHeaderByQuality(parsedAcceptHeader []acceptHeaderWithQuality) []acceptHeaderWithQuality {
 	sort.Sort(byQuality(parsedAcceptHeader))
+	log.Debugln("Sorted Accept Header list based on quality is :: ", parsedAcceptHeader)
 	return parsedAcceptHeader
 }
 

@@ -239,7 +239,7 @@ func (v *PrintASTVisitor) Visit(node ast.Node) ast.Visitor {
 			{
 				log.Debugln("Name  of struct is :: " + kk.Name.Name)
 				structType := kk.Type.(*ast.StructType)
-				log.Debugln("hi there", structType)
+				log.Debugln("Type of the struct is :: ", structType)
 				for _, field := range structType.Fields.List {
 					log.Debugln(reflect.TypeOf(field.Type), " name is ", field.Names)
 					fieldType := field.Type
@@ -267,9 +267,7 @@ func (v *PrintASTVisitor) Visit(node ast.Node) ast.Visitor {
 					}()
 					if typeName == "BaseController" {
 						log.Debugln("The package name is ", pkgName, typeName)
-						//v.cntrlSpec.ControllerName = append(v.cntrlSpec.ControllerName, kk.Name.Name)
 						cntrlSpec.ControllerName = append(cntrlSpec.ControllerName, kk.Name.Name)
-
 						log.Debugln("ControllerSpec is :: ", cntrlSpec)
 
 					}
@@ -280,7 +278,6 @@ func (v *PrintASTVisitor) Visit(node ast.Node) ast.Visitor {
 		case *ast.GenDecl:
 			{
 				log.Debugln("Name  of struct is :: ", kk)
-
 			}
 		}
 	}
