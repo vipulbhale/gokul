@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"text/template"
 
+	// "github.com/sirupsen/logrus"
 	"github.com/sirupsen/logrus"
 	"github.com/vipulbhale/gokul/server/util"
 )
@@ -95,8 +96,6 @@ func (d *DemoController) Demo() (error, *controller2.ModelAndView) {
 	// Set the Model and View in the ModelAndView Struct required by Gokul
 	modelAndView.SetModel(person)
 	modelAndView.SetView("view")
-	modelAndView.SetResponseType("text/html")
-	//d.Render()
 	return nil, modelAndView
 }
 
@@ -109,8 +108,6 @@ func (d *DemoController) DemoXML() (error, *controller2.ModelAndView) {
 	person := service.GetPerson() 
 	// Set the Model and View in the ModelAndView Struct required by Gokul
 	modelAndView.SetModel(person)
-	modelAndView.SetResponseType("application/xml")
-	//d.Render()
 	return nil, modelAndView
 }
 
@@ -123,8 +120,6 @@ func (d *DemoController) DemoJson() (error, *controller2.ModelAndView) {
 	person := service.GetPerson()
 	// Set the Model and View in the ModelAndView Struct required by Gokul
 	modelAndView.SetModel(person)
-	modelAndView.SetResponseType("application/json")
-	//d.Render()
 	return nil, modelAndView
 }
 `

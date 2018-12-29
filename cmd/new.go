@@ -1,13 +1,11 @@
 package cmd
 
 import (
-	"fmt"
 	"os"
 	"strings"
 
 	"github.com/spf13/cobra"
 	appTemplates "github.com/vipulbhale/gokul/server/apptemplates"
-	"github.com/vipulbhale/gokul/server/util"
 )
 
 var cmdNew = &cobra.Command{
@@ -23,7 +21,6 @@ func init() {
 }
 
 func createNewApplication(cmd *cobra.Command, args []string) {
-	fmt.Printf("Logger is %v\n", util.GetLogger())
 	Log.Debugln("Inside the new application command")
 	Log.Debugln("Scanning all existing apps for controllers")
 	// First check AppDirName is provided

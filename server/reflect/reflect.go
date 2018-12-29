@@ -17,9 +17,9 @@ import (
 )
 
 var (
-	cntrlSpec                     = new(controllerSpec)
-	packageNameMap                = make(map[string]string)
-	log            *logrus.Logger = util.GetLogger()
+	cntrlSpec      = new(controllerSpec)
+	packageNameMap = make(map[string]string)
+	log            *logrus.Logger
 )
 
 const MAIN = `// GENERATED CODE - DO NOT EDIT
@@ -27,8 +27,6 @@ package controller
 
 import (
 	"reflect"
-	//{{ range $index, $packageName := .PackageName }}
-	//"{{ $packageName }}"{{ end }}
 )
 
 var (
@@ -43,15 +41,6 @@ func RegisterControllers() map[string]reflect.Value{
 			return mapOfControllerNameToControllerObj 
 	{{ end }}
 }
-
-// func New(name string) (interface{}, bool) {
-// 	t, ok := mapOfControllerNameToControllerObj[name]
-// 	if !ok {
-// 		return nil, false
-// 	}
-// 	v := reflect.New(t)
-// 	return v.Interface(), true
-// }
 `
 
 type controllerSpec struct {
@@ -60,18 +49,13 @@ type controllerSpec struct {
 }
 
 func init() {
-	// // Output to stdout instead of the default stderr, could also be a file.
-	// log.SetOutput(os.Stdout)
-	// // Only log the debug severity or above.
-	// log.SetLevel(log.DebugLevel)
+	log = util.GetLogger()
 }
 
 func ScanAppsDirectory(configuration map[string]string, appName string) {
 	log.Debugln("Entering the ScanAppsDirectory.")
 	log.Debugln("inputs are :: ", configuration)
 	var appsHomeDirPath string
-	// srcRoot, _ := os.Getwd()
-	// log.Debugln("The srcRoot is :: ", srcRoot)
 	appsHomeDirPath = filepath.Join(configuration["apps.directory"])
 
 	directoryList := []string{}
