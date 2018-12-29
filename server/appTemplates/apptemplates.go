@@ -288,7 +288,7 @@ func CreateTemplates(dirname, appName, cfgFileLocation string) {
 
 	createBinAndPackageDirectory(filepath.Join(dirname, "bin"))
 	createBinAndPackageDirectory(filepath.Join(dirname, "pkg"))
-	createBinAndPackageDirectory(filepath.Join("var", "log", appName))
+	createBinAndPackageDirectory(filepath.Join("/","var", "log", appName))
 }
 
 func writeToFileContent(fileName, content string) {
