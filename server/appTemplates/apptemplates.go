@@ -7,7 +7,6 @@ import (
 	"path/filepath"
 	"text/template"
 
-	// "github.com/sirupsen/logrus"
 	"github.com/sirupsen/logrus"
 	"github.com/vipulbhale/gokul/server/util"
 )
@@ -225,26 +224,27 @@ func setupLogging(loggingDestFromConfig string, loggingLevel string) {
 	var logLevel logrus.Level
 	var err error
 
-	if len(loggingDestFromConfig) != 0 {
-		if loggingDestFromConfig == "stdout" {
+	if loggingDestFromConfig == "stdout" {
+		loggingDestination = os.Stdout
+	} else if strings.HasPrefix(loggingDestFromConfig, "file://") {
+		logFileName = strings.Split(loggingDestFromConfig, "file://")[0]
+		file, err := os.OpenFile(logFileName, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0755)
+		if err != nil {
+			fmt.Printf("Error while creating the error file :: %v.\n", err)
+			fmt.Printf("Using the default location /var/log/{{.AppNameForTemplate}}/app.log.\n")
+			createDirectory("/var/log/{{.AppNameForTemplate}}")
+			file, err = os.OpenFile("/var/log/{{.AppNameForTemplate}}/app.log", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0755)
+		}
+		loggingDestination = file
+	} else {
+		createDirectory("/var/log/{{.AppNameForTemplate}}")
+		file, err := os.OpenFile("/var/log/{{.AppNameForTemplate}}/app.log", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0755)
+		if err != nil {
+			fmt.Printf("Error while creating the error file :: %v.\n", err)
+			fmt.Printf("Using the stdout as the log destination.\n")
 			loggingDestination = os.Stdout
-		} else if strings.HasPrefix(loggingDestFromConfig, "file://") {
-			logFileName = strings.Split(loggingDestFromConfig, "file://")[0]
-			file, err := os.OpenFile(logFileName, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0755)
-			if err != nil {
-				fmt.Printf("Error while creating the error file :: %v.\n", err)
-				fmt.Printf("Using the default location /var/log/{{.AppNameForTemplate}}/app.log.\n")
-				file, err = os.OpenFile("/var/log/{{.AppNameForTemplate}}/app.log", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0755)
-			}
-			loggingDestination = file
 		} else {
-			file, err := os.OpenFile("/var/log/{{.AppNameForTemplate}}/app.log", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0755)
-			if err != nil {
-				fmt.Printf("Error while creating the error file :: %v.\n", err)
-				fmt.Printf("Using the stdout as the log destination.\n")
-				loggingDestination = os.Stdout
-			}
-			loggingDestination = file
+			loggingDestination = file 
 		}
 	}
 
@@ -260,6 +260,15 @@ func setupLogging(loggingDestFromConfig string, loggingLevel string) {
 	}
 	fmt.Println("Set the logger with correct destination and logLevel")
 	SetLogger(loggingDestination, logLevel)
+}
+
+func createDirectory(dirName string) {
+	if _, err := os.Stat(dirName); os.IsNotExist(err) {
+		err = os.MkdirAll(dirName, 0755)
+		if err != nil {
+			Logger.Errorln("Error while creating the directory", dirName)
+		}
+	}
 }
 `
 
@@ -288,7 +297,7 @@ func CreateTemplates(dirname, appName, cfgFileLocation string) {
 
 	createBinAndPackageDirectory(filepath.Join(dirname, "bin"))
 	createBinAndPackageDirectory(filepath.Join(dirname, "pkg"))
-	createBinAndPackageDirectory(filepath.Join("/","var", "log", appName))
+	createBinAndPackageDirectory(filepath.Join("/", "var", "log", appName))
 }
 
 func writeToFileContent(fileName, content string) {
