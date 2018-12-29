@@ -15,7 +15,9 @@ import (
 	"strings"
 	"time"
 
-	log "github.com/sirupsen/logrus"
+	"github.com/vipulbhale/gokul/server/util"
+
+	"github.com/sirupsen/logrus"
 	"github.com/vipulbhale/gokul/server/config"
 	"github.com/vipulbhale/gokul/server/controller"
 	"github.com/vipulbhale/gokul/server/routes"
@@ -34,17 +36,17 @@ func (a byQuality) Less(i, j int) bool { return a[i].quality > a[j].quality }
 
 var (
 	httpServer                       *http.Server
-	baseControllers                  *controller.BaseController
 	mapControllerNameToControllerObj map[string]reflect.Value
 	tempServer                       *server
+	log                              *logrus.Logger
 )
 
 func init() {
 	// Output to stdout instead of the default stderr, could also be a file.
-	log.SetOutput(os.Stdout)
+	// log.SetOutput(os.Stdout)
 	// Only log the debug severity or above.
-	log.SetLevel(log.DebugLevel)
-	baseControllers = new(controller.BaseController)
+	// log.SetLevel(log.DebugLevel)
+	log = util.GetLogger()
 }
 
 type server struct {

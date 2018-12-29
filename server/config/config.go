@@ -14,13 +14,14 @@ import (
 
 var (
 	Cfg map[string]string
-	log *logrus.Logger = util.GetLogger()
+	log *logrus.Logger
 )
 
 func init() {
 	// log.SetOutput(os.Stdout)
 	// // Only log the debug severity or above.
 	// log.SetLevel(log.DebugLevel)
+	log = util.GetLogger()
 }
 
 // LoadConfigFile ... Load the config file for the server

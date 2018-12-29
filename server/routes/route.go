@@ -17,8 +17,8 @@ import (
 var (
 	routeRepo    map[string]*route
 	regex        *regexp.Regexp
-	patternRoute                = "([A-Z])+\\s+([/a-zA-Z0-9])+\\s+\\w+.\\w+"
-	log          *logrus.Logger = util.GetLogger()
+	patternRoute = "([A-Z])+\\s+([/a-zA-Z0-9])+\\s+\\w+.\\w+"
+	log          *logrus.Logger
 )
 
 func init() {
@@ -28,6 +28,7 @@ func init() {
 
 	// // Only log the debug severity or above.
 	// log.SetLevel(log.DebugLevel)
+	log = util.GetLogger()
 }
 
 type route struct {

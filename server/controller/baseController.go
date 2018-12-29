@@ -5,7 +5,7 @@ import (
 	"github.com/vipulbhale/gokul/server/util"
 )
 
-var log *logrus.Logger = util.GetLogger()
+var log *logrus.Logger
 
 type Controller interface {
 	Render()
@@ -18,6 +18,10 @@ type BaseController struct {
 type ModelAndView struct {
 	Model interface{}
 	View  string
+}
+
+func init() {
+	log = util.GetLogger()
 }
 
 func (modelAndView *ModelAndView) SetModel(model interface{}) {
