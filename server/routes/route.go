@@ -172,6 +172,7 @@ func getRouteFromYaml(url string, httpVerb string) (r *route) {
 	r = new(route)
 
 	for i := 0; i < len(routeForYaml.UriInfo); i++ {
+		log.Debugln("The route to be compared is :: ", routeForYaml.UriInfo[i])
 		if strings.Compare(strings.TrimSpace(url), routeForYaml.UriInfo[i].Uri) == 0 && strings.Compare(strings.ToLower(strings.TrimSpace(httpVerb)), strings.ToLower(routeForYaml.UriInfo[i].HttpMethod)) == 0 {
 			log.Debugln("There is match for url and httpverb")
 			r.SetController(routeForYaml.UriInfo[i].ControllerMethod)
