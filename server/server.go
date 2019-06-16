@@ -210,10 +210,17 @@ func Run(s *server) {
 	}
 
 	httpServer := &http.Server{
-		Addr:         address,
-		Handler:      http.HandlerFunc(handle),
-		ReadTimeout:  time.Duration(readTimeOut) * time.Second,
-		WriteTimeout: time.Duration(writeTimeOut) * time.Second,
+		Addr:              address,
+		Handler:           http.HandlerFunc(handle),
+		TLSConfig:         nil,
+		ReadTimeout:       time.Duration(readTimeOut) * time.Second,
+		ReadHeaderTimeout: 0,
+		WriteTimeout:      time.Duration(writeTimeOut) * time.Second,
+		IdleTimeout:       0,
+		MaxHeaderBytes:    0,
+		TLSNextProto:      nil,
+		ConnState:         nil,
+		ErrorLog:          nil,
 	}
 
 	listener, err := net.Listen(network, httpServer.Addr)

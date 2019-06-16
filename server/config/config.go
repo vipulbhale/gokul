@@ -18,9 +18,6 @@ var (
 )
 
 func init() {
-	// log.SetOutput(os.Stdout)
-	// // Only log the debug severity or above.
-	// log.SetLevel(log.DebugLevel)
 	log = util.GetLogger()
 }
 
