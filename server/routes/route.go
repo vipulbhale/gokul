@@ -2,7 +2,6 @@ package routes
 
 import (
 	"bufio"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
@@ -119,8 +118,8 @@ func findTypeOfConfigFile(routeFileDir string) (routeFileType string) {
 	}
 
 	for _, file := range filesInfo {
-		fmt.Println(file.Name())
 		if strings.Compare(strings.TrimSuffix(file.Name(), filepath.Ext(file.Name())), "routes") == 0 {
+			log.Debugln("Found out the file type after the match")
 			routeFileType = strings.ToLower(filepath.Ext(file.Name()))
 			break
 		}
@@ -174,9 +173,12 @@ func getRouteFromYaml(url string, httpVerb string) (r *route) {
 
 	for i := 0; i < len(routeForYaml.UriInfo); i++ {
 		if strings.Compare(strings.TrimSpace(url), routeForYaml.UriInfo[i].Uri) == 0 && strings.Compare(strings.ToLower(strings.TrimSpace(httpVerb)), strings.ToLower(routeForYaml.UriInfo[i].HttpMethod)) == 0 {
+			log.Debugln("There is match for url and httpverb")
 			r.SetController(routeForYaml.UriInfo[i].ControllerMethod)
 			r.SetMethod(routeForYaml.UriInfo[i].HttpMethod)
 			r.SetURL(routeForYaml.UriInfo[i].Uri)
+			log.Debugln("The selected route is ", r)
+			break
 		}
 	}
 
