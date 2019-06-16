@@ -70,7 +70,8 @@ func getAppContext(url string) string {
 	log.Debug("Entering the getAppContext method")
 	splitURL := strings.Split(url, "/")
 	appContext := splitURL[1]
-	log.Debugln("Appcontext is :: {} ", appContext)
+	log.Debugln("Appcontext is ::  ", appContext)
+	log.Debug("Leaving the getAppContext method")
 	return appContext
 }
 
@@ -83,31 +84,57 @@ func GetRoute(url string, httpVerb string) (r *route) {
 
 	splitURL := strings.Split(url, "/")
 	appContext := getAppContext(url)
-	log.Debugln("The extracted appContext is :: {}", appContext)
+	log.Debugln("The extracted appContext is :: ", appContext)
 	for i := 2; i < len(splitURL); i++ {
 		appURL = appURL + "/" + splitURL[i]
 	}
 
 	//appRouteCfgFile := filepath.Join(config.Cfg["apps.directory"], "/config/routes.cfg")
 	appRouteCfgFile := filepath.Join(config.Cfg["apps.directory"], "config")
-
-	log.Debug("appRouteCfgFile is :: {}", appRouteCfgFile)
+	log.Debugln("appRouteCfgFile is :: ", appRouteCfgFile)
 
 	//find the type of the route file
 	routeFileType := findTypeOfConfigFile(appRouteCfgFile)
+	log.Debugln("The route file type is :: ", routeFileType)
+
 	if strings.Compare(routeFileType, ".yaml") == 0 || strings.Compare(routeFileType, ".yml") == 0 {
-		r = GetRouteFromYaml(appURL, httpVerb)
+		log.Debugln("The route file type is yaml")
+		log.Debugln("Getting the route corresponding to this URL :: ", url, " and HTTP Verb :: ", httpVerb)
+		r = getRouteFromYaml(appURL, httpVerb)
 	} else if strings.Compare(routeFileType, ".cfg") == 0 {
-		r = getRouteWhenFileIsCfgType(appRouteCfgFile, httpVerb, appURL, r)
+		log.Debugln("The route file type is config/cfg")
+		r = getRouteWhenFileIsCfgType(appURL, httpVerb)
 	}
-	log.Debugln("The route that was extracted based on the URI and VERB is {}", r)
+	log.Debugln("The route that was extracted based on the URI and VERB is :: ", r)
 	log.Debugln("Leaving the GetRoute method.")
 	return r
 }
 
-func getRouteWhenFileIsCfgType(appRouteCfgFile string, httpVerb string, appURL string, r *route) (routeResult *route) {
+func findTypeOfConfigFile(routeFileDir string) (routeFileType string) {
+	log.Debugln("Entering the findTypeOfConfigFile method.")
+	log.Debugln("The routeFileDir as input to this method is ::  ", routeFileDir)
+	filesInfo, err := ioutil.ReadDir(routeFileDir)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	for _, file := range filesInfo {
+		fmt.Println(file.Name())
+		if strings.Compare(strings.TrimSuffix(file.Name(), filepath.Ext(file.Name())), "routes") == 0 {
+			routeFileType = strings.ToLower(filepath.Ext(file.Name()))
+			break
+		}
+	}
+	log.Debugln("The selected route config file type is :: ", routeFileType)
+	log.Debugln("Leaving the findTypeOfConfigFile method.")
+	return routeFileType
+}
+
+func getRouteWhenFileIsCfgType(appURL string, httpVerb string) (r *route) {
+	log.Debugln("Entering the getRouteWhenFileIsCfgType method.")
+	r = new(route)
 	compiledPattern := regexp.MustCompile("\\s+")
-	appcfgInputFile, cfgInputError := os.Open(appRouteCfgFile)
+	appcfgInputFile, cfgInputError := os.Open(filepath.Join(config.Cfg["apps.directory"], "config", "routes.cfg"))
 	if cfgInputError != nil {
 		log.Fatalln("Error reading the config file for app. Exiting.")
 		os.Exit(1)
@@ -135,27 +162,13 @@ func getRouteWhenFileIsCfgType(appRouteCfgFile string, httpVerb string, appURL s
 			break
 		}
 	}
-	routeResult = r
-	return routeResult
+	log.Debugln("Leaving the getRouteWhenFileIsCfgType method.")
+	return r
 }
 
-func findTypeOfConfigFile(routeFileDir string) (routeFileType string) {
-	filesInfo, err := ioutil.ReadDir(routeFileDir)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	for _, file := range filesInfo {
-		fmt.Println(file.Name())
-		if strings.Compare(strings.TrimSuffix(file.Name(), filepath.Ext(file.Name())), "routes") == 0 {
-			routeFileType = strings.ToLower(filepath.Ext(file.Name()))
-			break
-		}
-	}
-	return routeFileType
-}
-
-func GetRouteFromYaml(url string, httpVerb string) (r *route) {
+func getRouteFromYaml(url string, httpVerb string) (r *route) {
+	log.Debugln("Entering the getRouteFromYaml method.")
+	log.Debugln("Input to this method are url :: %v :: httpverb is :: %v", url, httpVerb)
 	routeForYaml := readRoutesYaml()
 	r = new(route)
 
@@ -166,11 +179,13 @@ func GetRouteFromYaml(url string, httpVerb string) (r *route) {
 			r.SetURL(routeForYaml.UriInfo[i].Uri)
 		}
 	}
+
+	log.Debugln("Leaving the getRouteFromYaml method.")
 	return r
 }
 
 func readRoutesYaml() (routeForYaml *routeYaml) {
-	yamlFile, err := ioutil.ReadFile(filepath.Join(config.Cfg["apps.directory"], "/config/routes.yml"))
+	yamlFile, err := ioutil.ReadFile(filepath.Join(config.Cfg["apps.directory"], "config", "routes.yml"))
 	if err != nil {
 		log.Fatalln("Error while reading the app config file in yaml format. Please create the file in config directory of app. Exiting... ")
 	}
@@ -178,7 +193,7 @@ func readRoutesYaml() (routeForYaml *routeYaml) {
 	if err != nil {
 		log.Fatalln("Error while parsing the routes yaml file. Please try again with correct routes.yml file")
 	}
-	log.Debugln("Contents of parsed yaml file are {}", routeForYaml)
+	log.Debugln("Contents of parsed yaml file are :: ", routeForYaml)
 	return routeForYaml
 
 }
