@@ -37,10 +37,10 @@ type route struct {
 
 type routeYaml struct {
 	UriInfo []struct {
-		Uri              string
+		Uri              string `yaml:"uri"`
 		ControllerMethod string `yaml:"controller-method"`
 		HttpMethod       string `yaml:"http-method"`
-	}
+	} `yaml:"uriInfo"`
 }
 
 func (r *route) GetURL() string {
@@ -152,8 +152,8 @@ func getRouteWhenFileIsCfgType(appURL string, httpVerb string) (r *route) {
 			if strings.Compare(appURL, completeURL) == 0 {
 				if strings.Compare(httpVerb, httpMethod) == 0 {
 					r.Url = completeURL
-					r.Method = strings.Split(controllerAndMethod, ".")[1]
 					r.Controller = strings.Split(controllerAndMethod, ".")[0]
+					r.Method = strings.Split(controllerAndMethod, ".")[1]
 				}
 			}
 		}
@@ -175,9 +175,9 @@ func getRouteFromYaml(url string, httpVerb string) (r *route) {
 		log.Debugln("The route to be compared is :: ", routeForYaml.UriInfo[i])
 		if strings.Compare(strings.TrimSpace(url), routeForYaml.UriInfo[i].Uri) == 0 && strings.Compare(strings.ToLower(strings.TrimSpace(httpVerb)), strings.ToLower(routeForYaml.UriInfo[i].HttpMethod)) == 0 {
 			log.Debugln("There is match for url and httpverb")
-			r.SetController(routeForYaml.UriInfo[i].ControllerMethod)
-			r.SetMethod(routeForYaml.UriInfo[i].HttpMethod)
 			r.SetURL(routeForYaml.UriInfo[i].Uri)
+			r.SetController(strings.Split(routeForYaml.UriInfo[i].ControllerMethod, ".")[0])
+			r.SetMethod(strings.Split(routeForYaml.UriInfo[i].ControllerMethod, ".")[1])
 			log.Debugln("The selected route is ", r)
 			break
 		}
@@ -192,11 +192,13 @@ func readRoutesYaml() (routeForYaml *routeYaml) {
 	if err != nil {
 		log.Fatalln("Error while reading the app config file in yaml format. Please create the file in config directory of app. Exiting... ")
 	}
-	err = yaml.Unmarshal(yamlFile, &routeForYaml)
+	log.Debugln("The yaml file for routes is :: ", yamlFile)
+	routeParsed := routeYaml{}
+	err = yaml.Unmarshal(yamlFile, &routeParsed)
 	if err != nil {
 		log.Fatalln("Error while parsing the routes yaml file. Please try again with correct routes.yml file")
 	}
-	log.Debugln("Contents of parsed yaml file are :: ", routeForYaml)
-	return routeForYaml
+	log.Debugln("Contents of parsed yaml file are :: ", &routeParsed)
+	return &routeParsed
 
 }

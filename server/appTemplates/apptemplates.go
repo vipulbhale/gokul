@@ -37,6 +37,18 @@ const ROUTES_CFG_TEMPLATE = `GET             /demo           DemoController.Demo
 GET             /demoxml           DemoController.DemoXML
 GET             /demojson           DemoController.DemoJson
 `
+
+const ROUTES_YML_TEMPLATE = `uriInfo:
+      - uri: /demo
+        controller-method: "Democontroller.Demo"
+        http-method: GET
+      - uri: /demoxml
+        controller-method: "Democontroller.DemoXML"
+        http-method: GET
+      - uri: /demojson
+        controller-method: "Democontroller.DemoJson"
+        http-method: GET`
+
 const MAIN_PACKAGE = `package main
 import (
 	"fmt" 
@@ -280,11 +292,6 @@ func init() {
 func CreateTemplates(dirname, appName, cfgFileLocation string) {
 	log.Debugln("Entering the CreateTemplates method.")
 
-	// writeToFile(filepath.Join(dirname, "src", "github.com", appName, "routes"), "route.go", appName, cfgFileLocation, ROUTES_TEMPLATE)
-	// writeToFile(filepath.Join(dirname, "src", "github.com", appName, "server"), "server.go", appName, cfgFileLocation, SERVER_TEMPLATE)
-	// writeToFile(filepath.Join(dirname, "src", "github.com", appName, "config"), "config.go", appName, cfgFileLocation, SERVER_CONFIG_TEMPLATE)
-	// writeToFileReflect(filepath.Join(dirname, "src", "github.com", appName, "reflect", "reflect.go"), GOKUL_REFLECT_TEMPLATE)
-
 	writeToFileUsingTemplate(filepath.Join(dirname, "src", "github.com", appName), "main.go", appName, cfgFileLocation, MAIN_PACKAGE)
 	writeToFileUsingTemplate(filepath.Join(dirname, "src", "github.com", appName, "controller"), "controller.go", appName, cfgFileLocation, CONTROLLER_TEMPLATE)
 	writeToFileUsingTemplate(filepath.Join(dirname, "src", "github.com", appName, "service"), "service.go", appName, cfgFileLocation, SERVICE_TEMPLATE)
@@ -292,7 +299,7 @@ func CreateTemplates(dirname, appName, cfgFileLocation string) {
 	writeToFileContent(filepath.Join(dirname, "src", "github.com", appName, "view", "view.html"), VIEW_TEMPLATE)
 	writeToFileUsingTemplate(filepath.Join(dirname, "src", "github.com", appName, "util"), "logger.go", appName, cfgFileLocation, UTIL_LOGGER_TEMPLATE)
 	writeToFileUsingTemplate(filepath.Join(dirname, "src", "github.com", appName, "config"), "server.yml", appName, cfgFileLocation, CONFIG_FILE_TEMPLATE)
-	writeToFileUsingTemplate(filepath.Join(dirname, "src", "github.com", appName, "config"), "routes.cfg", appName, cfgFileLocation, ROUTES_CFG_TEMPLATE)
+	writeToFileUsingTemplate(filepath.Join(dirname, "src", "github.com", appName, "config"), "routes.yml", appName, cfgFileLocation, ROUTES_YML_TEMPLATE)
 	writeToFileUsingTemplate(filepath.Join(dirname, "src", "github.com", appName), "variables.env", appName, cfgFileLocation, "GOPATH="+os.Getenv("GOPATH"))
 
 	createBinAndPackageDirectory(filepath.Join(dirname, "bin"))
