@@ -18,53 +18,65 @@ import (
 )
 
 var (
-	routeRepo    map[string]*route
+	routeRepo    map[string]*Route
 	regex        *regexp.Regexp
 	patternRoute = "([A-Z])+\\s+([/a-zA-Z0-9])+\\s+\\w+.\\w+"
 	log          *logrus.Logger
+	routeParsed  *routeYaml
 )
 
 func init() {
 	regex, _ = regexp.Compile(patternRoute)
 	log = util.GetLogger()
+	routeParsed = new(routeYaml)
 }
 
-type route struct {
-	Url        string
+// Route structure holds the information about the URL, Controller and Method for it.
+type Route struct {
+	URL        string
 	Controller string
 	Method     string
 }
 
 type routeYaml struct {
-	UriInfo []struct {
-		Uri              string `yaml:"uri"`
+	URIInfo []struct {
+		URI              string `yaml:"uri"`
 		ControllerMethod string `yaml:"controller-method"`
-		HttpMethod       string `yaml:"http-method"`
+		HTTPMethod       string `yaml:"http-method"`
 	} `yaml:"uriInfo"`
 }
 
-func (r *route) GetURL() string {
-	return r.Url
+// GetURL method returns the URL in Route Structure
+func (r *Route) GetURL() string {
+	return r.URL
 }
 
-func (r *route) GetController() string {
+// GetController method returns the Controller in Route Structure
+func (r *Route) GetController() string {
 	return r.Controller
 }
-func (r *route) GetMethod() string {
+
+// GetMethod method returns the Method in Route Structure
+func (r *Route) GetMethod() string {
 	return r.Method
 }
 
-func (r *route) SetURL(url string) {
-	r.Url = url
+//SetURL method sets the URL in Route Structure.
+func (r *Route) SetURL(url string) {
+	r.URL = url
 }
 
-func (r *route) SetController(controller string) {
+// SetController method sets the controller in Route Structure
+func (r *Route) SetController(controller string) {
 	r.Controller = controller
 }
-func (r *route) SetMethod(method string) {
+
+// SetMethod method sets the method in Route Structure
+func (r *Route) SetMethod(method string) {
 	r.Method = method
 }
 
+//getAppContext method takes the URL as input and returns the application context component of the URL.
 func getAppContext(url string) string {
 	log.Debug("Entering the getAppContext method")
 	splitURL := strings.Split(url, "/")
@@ -74,11 +86,13 @@ func getAppContext(url string) string {
 	return appContext
 }
 
-func GetRoute(url string, httpVerb string) (r *route) {
+// GetRoute function takes the url and http verb of request as input returns the pointer to route as *Route
+// checks the URL in the file. Returns the route structure.
+func GetRoute(url string, httpVerb string) (r *Route) {
 	log.Debugln("Entering the GetRoute method.")
 	var appURL string
 
-	r = new(route)
+	r = new(Route)
 	appURL = ""
 
 	splitURL := strings.Split(url, "/")
@@ -129,9 +143,9 @@ func findTypeOfConfigFile(routeFileDir string) (routeFileType string) {
 	return routeFileType
 }
 
-func getRouteWhenFileIsCfgType(appURL string, httpVerb string) (r *route) {
+func getRouteWhenFileIsCfgType(appURL string, httpVerb string) (r *Route) {
 	log.Debugln("Entering the getRouteWhenFileIsCfgType method.")
-	r = new(route)
+	r = new(Route)
 	compiledPattern := regexp.MustCompile("\\s+")
 	appcfgInputFile, cfgInputError := os.Open(filepath.Join(config.Cfg["apps.directory"], "config", "routes.cfg"))
 	if cfgInputError != nil {
@@ -151,7 +165,7 @@ func getRouteWhenFileIsCfgType(appURL string, httpVerb string) (r *route) {
 			log.Info("HttpMethod :: completeURL :: controllerAndMethod :: ", httpMethod, completeURL, controllerAndMethod)
 			if strings.Compare(appURL, completeURL) == 0 {
 				if strings.Compare(httpVerb, httpMethod) == 0 {
-					r.Url = completeURL
+					r.URL = completeURL
 					r.Controller = strings.Split(controllerAndMethod, ".")[0]
 					r.Method = strings.Split(controllerAndMethod, ".")[1]
 				}
@@ -165,19 +179,20 @@ func getRouteWhenFileIsCfgType(appURL string, httpVerb string) (r *route) {
 	return r
 }
 
-func getRouteFromYaml(url string, httpVerb string) (r *route) {
+func getRouteFromYaml(url, httpVerb string) (r *Route) {
 	log.Debugln("Entering the getRouteFromYaml method.")
 	log.Debugln("Input to this method are url :: %v :: httpverb is :: %v", url, httpVerb)
-	routeForYaml := readRoutesYaml()
-	r = new(route)
-
-	for i := 0; i < len(routeForYaml.UriInfo); i++ {
-		log.Debugln("The route to be compared is :: ", routeForYaml.UriInfo[i])
-		if strings.Compare(strings.TrimSpace(url), routeForYaml.UriInfo[i].Uri) == 0 && strings.Compare(strings.ToLower(strings.TrimSpace(httpVerb)), strings.ToLower(routeForYaml.UriInfo[i].HttpMethod)) == 0 {
+	routeForYaml := readRoutesYaml(routeParsed)
+	r = new(Route)
+	// Iterate through all routes.
+	for i := 0; i < len(routeForYaml.URIInfo); i++ {
+		log.Debugln("The route to be compared is :: ", routeForYaml.URIInfo[i])
+		// Calling the patternMatch
+		if patternMatchingTheURL(url, routeForYaml.URIInfo[i].URI) && strings.Compare(strings.ToLower(strings.TrimSpace(httpVerb)), strings.ToLower(routeForYaml.URIInfo[i].HTTPMethod)) == 0 {
 			log.Debugln("There is match for url and httpverb")
-			r.SetURL(routeForYaml.UriInfo[i].Uri)
-			r.SetController(strings.Split(routeForYaml.UriInfo[i].ControllerMethod, ".")[0])
-			r.SetMethod(strings.Split(routeForYaml.UriInfo[i].ControllerMethod, ".")[1])
+			r.SetURL(routeForYaml.URIInfo[i].URI)
+			r.SetController(strings.Split(routeForYaml.URIInfo[i].ControllerMethod, ".")[0])
+			r.SetMethod(strings.Split(routeForYaml.URIInfo[i].ControllerMethod, ".")[1])
 			log.Debugln("The selected route is ", r)
 			break
 		}
@@ -187,18 +202,39 @@ func getRouteFromYaml(url string, httpVerb string) (r *route) {
 	return r
 }
 
-func readRoutesYaml() (routeForYaml *routeYaml) {
-	yamlFile, err := ioutil.ReadFile(filepath.Join(config.Cfg["apps.directory"], "config", "routes.yml"))
-	if err != nil {
-		log.Fatalln("Error while reading the app config file in yaml format. Please create the file in config directory of app. Exiting... ")
+func patternMatchingTheURL(url, urlPattern string) (patternMatch bool) {
+	splitURL := strings.Split(url, "/")
+	splitURLPattern := strings.Split(urlPattern, "/")
+
+	if len(splitURL) != len(splitURLPattern) {
+		return false
 	}
-	log.Debugln("The yaml file for routes is :: ", yamlFile)
-	routeParsed := routeYaml{}
-	err = yaml.Unmarshal(yamlFile, &routeParsed)
-	if err != nil {
-		log.Fatalln("Error while parsing the routes yaml file. Please try again with correct routes.yml file")
+	for i := 0; i < len(splitURL); i++ {
+		if strings.HasPrefix(splitURLPattern[i], "{") && strings.HasSuffix(splitURLPattern[i], "}") {
+			continue
+		} else if strings.Compare(splitURL[i], splitURLPattern[i]) == 0 {
+			continue
+		} else {
+			return false
+		}
 	}
+	return true
+}
+
+func readRoutesYaml(routeParsed *routeYaml) (routeForYaml *routeYaml) {
+	if routeParsed != nil && len(routeParsed.URIInfo) == 0 {
+		yamlFile, err := ioutil.ReadFile(filepath.Join(config.Cfg["apps.directory"], "config", "routes.yml"))
+		if err != nil {
+			log.Fatalln("Error while reading the app config file in yaml format. Please create the file in config directory of app. Exiting... ")
+		}
+		log.Debugln("The yaml file for routes is :: ", yamlFile)
+		err = yaml.Unmarshal(yamlFile, &routeParsed)
+		if err != nil {
+			log.Fatalln("Error while parsing the routes yaml file. Please try again with correct routes.yml file")
+		}
+	}
+
 	log.Debugln("Contents of parsed yaml file are :: ", &routeParsed)
-	return &routeParsed
+	return routeParsed
 
 }
