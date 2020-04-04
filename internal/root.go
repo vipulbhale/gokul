@@ -1,4 +1,4 @@
-package cmd
+package internal
 
 import (
 	"fmt"
@@ -13,8 +13,8 @@ import (
 
 var (
 	userLicense string
-	VERSION     string
 	Log         *logrus.Logger
+	VERSION     string
 )
 
 var RootCmd = &cobra.Command{
