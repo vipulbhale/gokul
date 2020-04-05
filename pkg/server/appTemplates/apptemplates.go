@@ -292,14 +292,14 @@ func init() {
 func CreateTemplates(dirname, appName, cfgFileLocation string) {
 	log.Debugln("Entering the CreateTemplates method.")
 
-	writeToFileUsingTemplate(filepath.Join(dirname, "src", appName), "main.go", appName, cfgFileLocation, MAIN_PACKAGE)
-	writeToFileUsingTemplate(filepath.Join(dirname, "src",  appName, "controller"), "controller.go", appName, cfgFileLocation, CONTROLLER_TEMPLATE)
-	writeToFileUsingTemplate(filepath.Join(dirname, "src",  appName, "service"), "service.go", appName, cfgFileLocation, SERVICE_TEMPLATE)
-	writeToFileUsingTemplate(filepath.Join(dirname, "src",  appName, "model"), "model.go", appName, cfgFileLocation, MODEL_TEMPLATE)
-	writeToFileContent(filepath.Join(dirname, "src", appName, "view", "view.html"), VIEW_TEMPLATE)
-	writeToFileUsingTemplate(filepath.Join(dirname, "src",  appName, "util"), "logger.go", appName, cfgFileLocation, UTIL_LOGGER_TEMPLATE)
-	writeToFileUsingTemplate(filepath.Join(dirname, "src",  appName, "config"), "server.yml", appName, cfgFileLocation, CONFIG_FILE_TEMPLATE)
-	writeToFileUsingTemplate(filepath.Join(dirname, "src", appName, "config"), "routes.yml", appName, cfgFileLocation, ROUTES_YML_TEMPLATE)
+	writeToFileUsingTemplate(filepath.Join(dirname, "src", appName,"cmd"), "main.go", appName, cfgFileLocation, MAIN_PACKAGE)
+	writeToFileUsingTemplate(filepath.Join(dirname, "src",  appName, "internal", "controller"), "controller.go", appName, cfgFileLocation, CONTROLLER_TEMPLATE)
+	writeToFileUsingTemplate(filepath.Join(dirname, "src",  appName, "internal","service"), "service.go", appName, cfgFileLocation, SERVICE_TEMPLATE)
+	writeToFileUsingTemplate(filepath.Join(dirname, "src",  appName, "internal","model"), "model.go", appName, cfgFileLocation, MODEL_TEMPLATE)
+	writeToFileContent(filepath.Join(dirname, "src", appName,"internal", "view", "view.html"), VIEW_TEMPLATE)
+	writeToFileUsingTemplate(filepath.Join(dirname, "src",  appName,"internal", "util"), "logger.go", appName, cfgFileLocation, UTIL_LOGGER_TEMPLATE)
+	writeToFileUsingTemplate(filepath.Join(dirname, "src",  appName,"internal", "config"), "server.yml", appName, cfgFileLocation, CONFIG_FILE_TEMPLATE)
+	writeToFileUsingTemplate(filepath.Join(dirname, "src", appName, "internal","config"), "routes.yml", appName, cfgFileLocation, ROUTES_YML_TEMPLATE)
 	writeToFileUsingTemplate(filepath.Join(dirname, "src",  appName), "variables.env", appName, cfgFileLocation, "GOPATH="+os.Getenv("GOPATH"))
 
 	createBinAndPackageDirectory(filepath.Join(dirname, "bin"))
