@@ -1,0 +1,11 @@
+server:
+  port: 9000
+  address: "0.0.0.0"
+logging:
+  level: debug
+http:
+  read.timeout: 0
+  write.timeout: 0
+  maxrequestsize: 999999
+apps:
+  directory: /Users/vipul/Documents/Code/go/workspaces/gokul/src/github.com/apps
