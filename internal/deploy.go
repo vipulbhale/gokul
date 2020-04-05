@@ -8,8 +8,8 @@ import (
 	"path/filepath"
 
 	"github.com/spf13/cobra"
-	"github.com/vipulbhale/gokul/server/config"
-	goreflect "github.com/vipulbhale/gokul/server/reflect"
+	"github.com/vipulbhale/gokul/pkg/server/config"
+	goreflect "github.com/vipulbhale/gokul/pkg/server/reflect"
 )
 
 func init() {

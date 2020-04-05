@@ -6,7 +6,7 @@ import (
 
 	"github.com/sirupsen/logrus"
 
-	"github.com/vipulbhale/gokul/server/util"
+	"github.com/vipulbhale/gokul/pkg/server/util"
 
 	"github.com/spf13/cobra"
 )
