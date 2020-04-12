@@ -13,10 +13,13 @@ import (
 
 var (
 	userLicense string
-	Log         *logrus.Logger
-	VERSION     string
+	// Log  is a logger from Sirupsen produced logrus
+	Log *logrus.Logger
+	// VERSION of application
+	VERSION string
 )
 
+// RootCmd is the rootcommand of the gokul application
 var RootCmd = &cobra.Command{
 	Use:   "gokul",
 	Short: "gokul is used to generate stubs for web application , deploy the application , run the application.",

@@ -2,10 +2,11 @@ package config
 
 import (
 	"fmt"
-	"github.com/vipulbhale/gokul/pkg/server/util"
 	"path/filepath"
 	"strconv"
 	"strings"
+
+	"github.com/vipulbhale/gokul/pkg/server/util"
 
 	"github.com/sirupsen/logrus"
 
