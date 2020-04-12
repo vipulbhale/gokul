@@ -3,6 +3,7 @@ package internal
 import (
 	"bufio"
 	"fmt"
+	"os"
 	"os/exec"
 	"path/filepath"
 
@@ -21,13 +22,14 @@ var cmdRun = &cobra.Command{
 }
 
 func runApp(cmd *cobra.Command, args []string) {
-	Log.Debugln("Location of variable.env is ::  {}", filepath.Join(AppDirName, "src", "github.com", AppName, "variables.env"))
+	Log.Debugln("Location of variable.env is :: ", filepath.Join(AppDirName, "src", "github.com", AppName, "variables.env"))
 	goPath, err := exec.LookPath("go")
 	if err != nil {
 		Log.Fatalln("Error while getting the path of the go binary", err)
 	}
-	Log.Debug("The gopath is :: ", goPath)
-	command := exec.Command(goPath, "run", filepath.Join(AppDirName, "src", "github.com", AppName, "main.go"))
+	Log.Debug("The path of go binary is :: ", goPath)
+	command := exec.Command(goPath, "run", filepath.Join(AppDirName, "src", "github.com", AppName, "cmd", AppName, "main.go"))
+	command.Env = []string{"GOPATH=" + os.Getenv("GOPATH"), "PATH=" + os.Getenv("PATH"), "HOME=" + os.Getenv("HOME"), "GOCACHE=" + os.Getenv("GOCACHE")}
 	stdOutReader, errors := command.StdoutPipe()
 	done := make(chan struct{})
 	Log.Debugln("Running the main.go of app :: ", AppName)
@@ -36,18 +38,19 @@ func runApp(cmd *cobra.Command, args []string) {
 		for scanner.Scan() {
 			fmt.Printf("%s\n", scanner.Text())
 		}
-
 		done <- struct{}{}
 	}()
 
 	if errors != nil {
 		Log.Fatal(errors)
 	}
+
 	if err := command.Start(); err != nil {
 		Log.Fatal(err)
 	}
 
 	<-done
+
 	if err := command.Wait(); err != nil {
 		Log.Fatal(err)
 	}

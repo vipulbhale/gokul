@@ -31,11 +31,13 @@ func executeOSCommand(commandString string, parameters ...string) {
 	if err != nil {
 		Log.Fatalln("Error while getting the path of the go binary", err)
 	}
-	Log.Debug("The gopath is ", goPath)
+	Log.Debug("The path of go binary is ", goPath)
 
 	command := exec.Command(goPath, parameters...)
-	command.Env = []string{"GOPATH=" + filepath.Join(AppDirName), "PATH=" + os.Getenv("PATH")}
+	Log.Debugln("The AppDirName that would become GOPATH is ", AppDirName)
+	command.Env = []string{"GOPATH=" + os.Getenv("GOPATH"), "PATH=" + os.Getenv("PATH"), "HOME=" + os.Getenv("HOME"), "GOCACHE=" + os.Getenv("GOCACHE")}
 	stderr, err := command.StderrPipe()
+
 	if err != nil {
 		Log.Fatal(err)
 	}
@@ -58,11 +60,11 @@ func deployApp(cmd *cobra.Command, args []string) {
 	if len(CfgFileLocation) > 0 {
 		config.LoadConfigFile(CfgFileLocation)
 	} else {
-		CfgFileLocation = filepath.Join(AppDirName, "src", "github.com", AppName, "config", "server.yml")
+		CfgFileLocation = filepath.Join(AppDirName, "src", "github.com", AppName, "internal", "config", "server.yml")
 		config.LoadConfigFile(CfgFileLocation)
 	}
 
-	executeOSCommand("go", "get", "-u", "-d", "github.com/vipulbhale/gokul/server")
+	executeOSCommand("go", "get", "-u", "-d", "github.com/vipulbhale/gokul/pkg/server")
 	// start scanning all controllers for the given app or apps directory
 	if len(AppName) != 0 {
 		goreflect.ScanAppsDirectory(config.Cfg, AppName)
