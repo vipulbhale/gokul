@@ -3,3 +3,4 @@
 .vscode/
 go.sum
 gokul.yaml
+cmd/gokul/__debug_bin
