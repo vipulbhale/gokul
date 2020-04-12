@@ -21,22 +21,29 @@ var cmdRun = &cobra.Command{
 	Run:   runApp,
 }
 
-func runApp(cmd *cobra.Command, args []string) {
-	Log.Debugln("Location of variable.env is :: ", filepath.Join(AppDirName, "src", "github.com", AppName, "variables.env"))
-	goPath, err := exec.LookPath("go")
+func commandExecutor(cmdArgs ...string) {
+	Log.Debugln("Entering commandExecutor function.")
+	goBinaryPath, err := exec.LookPath("go")
 	if err != nil {
 		Log.Fatalln("Error while getting the path of the go binary", err)
 	}
-	Log.Debug("The path of go binary is :: ", goPath)
-	command := exec.Command(goPath, "run", filepath.Join(AppDirName, "src", "github.com", AppName, "cmd", AppName, "main.go"))
-	command.Env = []string{"GOPATH=" + os.Getenv("GOPATH"), "PATH=" + os.Getenv("PATH"), "HOME=" + os.Getenv("HOME"), "GOCACHE=" + os.Getenv("GOCACHE")}
+	Log.Debugln("The path of go binary is :: ", goBinaryPath)
+	appRoot := filepath.Join(AppDirName, "src", "github.com", AppName)
+	command := exec.Command(goBinaryPath, cmdArgs[:]...)
+	command.Dir = appRoot
+	command.Env = []string{"GOPATH=" + os.Getenv("GOPATH"), "PATH=" + os.Getenv("PATH"), "HOME=" + os.Getenv("HOME")}
 	stdOutReader, errors := command.StdoutPipe()
+	stdErrReader, errors := command.StderrPipe()
 	done := make(chan struct{})
-	Log.Debugln("Running the main.go of app :: ", AppName)
-	scanner := bufio.NewScanner(stdOutReader)
+	Log.Debugln("Running the command :: ", command.String)
+	scannerStdOut := bufio.NewScanner(stdOutReader)
+	scannerStdErr := bufio.NewScanner(stdErrReader)
 	go func() {
-		for scanner.Scan() {
-			fmt.Printf("%s\n", scanner.Text())
+		for scannerStdOut.Scan() {
+			fmt.Printf("%s\n", scannerStdOut.Text())
+		}
+		for scannerStdErr.Scan() {
+			fmt.Printf("%s\n", scannerStdErr.Text())
 		}
 		done <- struct{}{}
 	}()
@@ -52,7 +59,12 @@ func runApp(cmd *cobra.Command, args []string) {
 	<-done
 
 	if err := command.Wait(); err != nil {
-		Log.Fatal(err)
+		Log.Info(err)
 	}
+}
 
+func runApp(cmd *cobra.Command, args []string) {
+	Log.Debugln("Location of variable.env is :: ", filepath.Join(AppDirName, "src", "github.com", AppName, "variables.env"))
+	commandExecutor("mod", "init", "github.com/"+AppName)
+	commandExecutor("run", filepath.Join(AppDirName, "src", "github.com", AppName, "cmd", AppName, "main.go"))
 }

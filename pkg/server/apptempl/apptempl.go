@@ -42,13 +42,13 @@ GET             /demojson           DemoController.DemoJson
 
 const ROUTES_YML_TEMPLATE = `uriInfo:
       - uri: /demo
-        controller-method: "Democontroller.Demo"
+        controller-method: "DemoController.Demo"
         http-method: GET
       - uri: /demoxml
-        controller-method: "Democontroller.DemoXML"
+        controller-method: "DemoController.DemoXML"
         http-method: GET
       - uri: /demojson
-        controller-method: "Democontroller.DemoJson"
+        controller-method: "DemoController.DemoJson"
         http-method: GET`
 
 const MAIN_PACKAGE = `package main
@@ -62,7 +62,7 @@ import (
 )
 
 var Log         *logrus.Logger
-const cfgFileLocation = "{{.ParentAppDirectory}}/{{.AppNameForTemplate}}/config/server.yml"
+const cfgFileLocation = "{{.CfgFileLocation}}/server.yml"
 
 func init(){
 	Log = util.GetLogger()

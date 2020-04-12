@@ -46,6 +46,7 @@ func readConfig(filename, dirname string, defaults map[string]interface{}) (*vip
 
 // Load the config as default or from config file
 func loadConfig(cfgFileName string) map[string]string {
+	log.Debugln("Entering the loadConfig function with cfgFileName :: ", cfgFileName)
 	serverConfig := make(map[string]string)
 
 	filename := strings.TrimSuffix(filepath.Base(cfgFileName), filepath.Ext(filepath.Base(cfgFileName)))

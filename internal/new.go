@@ -2,6 +2,7 @@ package internal
 
 import (
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -34,10 +35,16 @@ func createNewApplication(cmd *cobra.Command, args []string) {
 		Log.Debugln("After making changes current GOPATH is ", os.Getenv("GOPATH"))
 	}
 
-		// // First check AppDirName is provided
+	// First check AppDirName is provided
 	if len(AppDirName) == 0 {
 		AppDirName = os.Getenv("GOPATH")
 	}
+
+	// First check CfgFileLocation is provided
+	if len(CfgFileLocation) == 0 {
+		CfgFileLocation = filepath.Join(AppDirName, "src", "github.com", AppName, "internal", "config")
+	}
+
 	// all application/s are scanned now copy required server files to the apps directory
 	apptempl.CreateTemplates(AppDirName, AppName, CfgFileLocation)
 }
